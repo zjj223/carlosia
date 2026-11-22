@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>静态页面 / 部署 / 判题 —— 一张图看懂</title>
+<style>
+  :root{
+    --blue:#2563eb; --blue-bg:#eff4ff;
+    --green:#15803d; --green-bg:#eefaf0;
+    --amber:#b45309; --amber-bg:#fff7ea;
+    --gray:#475569; --gray-bg:#f1f5f9;
+    --ink:#1e293b; --sub:#64748b; --line:#dde4ee; --bg:#f4f6fa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);
+       font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+       -webkit-font-smoothing:antialiased;}
+  .page{width:1440px;padding:52px 64px 44px;}
+
+  /* ---------- header ---------- */
+  .eyebrow{display:inline-block;font-size:13px;letter-spacing:.12em;color:var(--blue);
+           background:var(--blue-bg);border:1px solid #c7d8ff;border-radius:99px;padding:6px 16px;}
+  h1{font-size:42px;line-height:1.28;margin:20px 0 0;letter-spacing:-.5px;}
+  h1 em{font-style:normal;color:var(--blue);}
+  .lead{margin-top:16px;font-size:19px;line-height:1.75;color:var(--sub);max-width:1120px;}
+  .lead b{color:var(--ink);font-weight:600;}
+
+  /* ---------- section ---------- */
+  .sec{margin-top:44px;}
+  .sec-title{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;}
+  .sec-no{font-size:13px;font-weight:700;color:#fff;background:var(--ink);
+          width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+          flex:0 0 auto;transform:translateY(-2px);}
+  .sec-title h2{font-size:24px;letter-spacing:-.3px;}
+
+  /* ---------- 三张定义卡 ---------- */
+  .trio-def{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+  .def{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px 24px 24px;
+       position:relative;overflow:hidden;}
+  .def::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;}
+  .def.g::before{background:#94a3b8;} .def.a::before{background:#e2a03f;} .def.gr::before{background:#22a45d;}
+  .def-tag{font-size:12px;letter-spacing:.08em;padding:4px 10px;border-radius:7px;display:inline-block;font-weight:600;}
+  .def.g .def-tag{color:var(--gray);background:var(--gray-bg);border:1px solid #e2e8f0;}
+  .def.a .def-tag{color:var(--amber);background:var(--amber-bg);border:1px solid #f6e0bb;}
+  .def.gr .def-tag{color:var(--green);background:var(--green-bg);border:1px solid #c7ecd0;}
+  .def h3{font-size:26px;margin:14px 0 10px;}
+  .def .one{font-size:15px;color:var(--sub);margin-bottom:14px;font-weight:600;}
+  .def p{font-size:15px;line-height:1.85;color:#334155;}
+  .def code{font-family:Consolas,"Courier New",monospace;background:#f1f5f9;border-radius:5px;
+            padding:1px 6px;font-size:13.5px;color:#0f172a;}
+
+  /* ---------- 阶段 0 小图 ---------- */
+  .mini{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 40px;}
+  .mini-row{display:flex;align-items:center;justify-content:center;gap:18px;}
+  .chip{background:var(--gray-bg);border:1.5px solid #e2e8f0;border-radius:12px;padding:16px 22px;
+        text-align:center;min-width:200px;}
+  .chip .t{font-size:15px;font-weight:600;}
+  .chip .s{font-size:13px;color:var(--sub);margin-top:5px;}
+  .ar{color:#94a3b8;font-size:24px;flex:0 0 auto;}
+  .mini-foot{margin-top:24px;padding-top:18px;border-top:1px dashed #e2e8f0;
+             font-size:15px;color:var(--sub);display:flex;gap:10px;align-items:flex-start;}
+  .mini-foot .x{color:#c2410c;font-weight:700;flex:0 0 auto;}
+
+  /* ---------- 主架构图 ---------- */
+  .arch{background:#fff;border:1px solid var(--line);border-radius:18px;padding:34px 40px 30px;
+        display:flex;flex-direction:column;align-items:center;}
+
+  .node{border-radius:12px;padding:14px 22px;text-align:center;font-size:15px;font-weight:600;
+        line-height:1.55;}
+  .node small{display:block;font-size:13px;font-weight:400;color:var(--sub);margin-top:4px;}
+
+  .n-client{background:#eef2f7;border:1.5px solid #cbd5e1;min-width:760px;color:#334155;}
+
+  .lane{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;}
+  .vline{width:2px;height:22px;background:#cbd5e1;}
+  .vcap{font-size:13px;color:var(--sub);background:#f8fafc;border:1px solid var(--line);
+        border-radius:99px;padding:5px 14px;margin:6px 0;white-space:nowrap;}
+  .varrow{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;
+          border-top:9px solid #94a3b8;}
+
+  .server{border:2px solid #cbd5e1;border-radius:16px;padding:22px 26px 26px;
+          background:linear-gradient(#f8fafc,#fff);width:1240px;}
+  .server-hd{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .server-hd .dot{width:9px;height:9px;border-radius:50%;background:#22a45d;box-shadow:0 0 0 3px #d7f2e1;}
+  .server-hd .nm{font-size:16px;font-weight:700;}
+  .server-hd .meta{font-size:13px;color:var(--sub);}
+
+  .n-nginx{background:var(--blue-bg);border:1.5px solid #b8ccff;color:#1d4ed8;width:100%;}
+  .n-nginx small{color:#4b72cc;}
+
+  .branches{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;width:100%;margin-top:4px;}
+  .branch{display:flex;flex-direction:column;align-items:center;}
+  .blabel{font-family:Consolas,monospace;font-size:13.5px;color:#1d4ed8;background:#fff;
+          border:1px solid #c7d8ff;border-radius:6px;padding:3px 10px;margin:4px 0 8px;}
+
+  .n-static{background:var(--gray-bg);border:1.5px solid #dde4ee;color:#334155;width:100%;position:relative;}
+  .capnote{font-size:12.5px;font-weight:700;color:#b45309;margin-top:8px;letter-spacing:.02em;}
+  .n-preview{background:var(--amber-bg);border:1.5px solid #f0d9b0;color:#8a5a12;width:100%;}
+  .n-judge{background:var(--green-bg);border:1.5px solid #bfe8cb;color:#166534;width:100%;}
+
+  .n-docker{background:#0f2f24;border:1.5px solid #14523a;color:#d1fae5;margin-top:2px;
+            width:100%;min-width:0;padding:16px 20px;}
+  .n-docker small{color:#86efac;}
+  .n-docker .tagline{display:inline-block;margin-top:8px;font-size:12px;color:#065f46;
+                     background:#a7f3d0;border-radius:99px;padding:3px 10px;font-weight:700;}
+
+  /* ---------- 三阶段 ---------- */
+  .steps{display:grid;grid-template-columns:1fr 46px 1fr 46px 1fr;align-items:stretch;gap:0;}
+  .step{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 22px 20px;
+        display:flex;flex-direction:column;gap:9px;}
+  .step .no{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--sub);}
+  .step h4{font-size:19px;}
+  .step .d{font-size:14px;line-height:1.75;color:#475569;}
+  .step .res{font-size:13.5px;font-weight:600;margin-top:auto;padding-top:10px;border-top:1px dashed #e2e8f0;}
+  .step.s0 .res{color:#b91c1c;} .step.s1 .res{color:#b45309;} .step.s2 .res{color:#15803d;}
+  .sarrow{display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:26px;}
+
+  /* ---------- 误解 ---------- */
+  .myths{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .myth{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 24px;
+        display:flex;gap:16px;}
+  .myth .ic{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:#fef2f2;
+            color:#c2410c;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .myth .w{font-size:15px;font-weight:600;color:#94a3b8;text-decoration:line-through;margin-bottom:6px;}
+  .myth .r{font-size:14.5px;line-height:1.8;color:#334155;}
+  .myth .r b{color:var(--ink);}
+
+  /* ---------- 表 ---------- */
+  table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;
+        border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:15px;}
+  th{background:#f8fafc;text-align:left;font-size:14px;font-weight:700;color:#475569;
+     padding:14px 22px;border-bottom:1px solid var(--line);}
+  td{padding:15px 22px;border-bottom:1px solid #eef2f7;line-height:1.6;vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td:first-child{font-weight:600;}
+  td.k{color:#0f172a;}
+  td.m{color:var(--sub);font-size:14px;}
+  .pill{display:inline-block;font-size:12.5px;font-weight:700;border-radius:99px;padding:3px 11px;}
+  .pill.z{background:#f1f5f9;color:#475569;}
+  .pill.y{background:#fef3c7;color:#b45309;}
+  .pill.g{background:#dcfce7;color:#15803d;}
+
+  .foot{margin-top:40px;padding-top:24px;border-top:1px solid var(--line);
+        font-size:15px;color:var(--sub);line-height:1.8;}
+  .foot b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">《卡罗西亚大陆》· 上线图解</div>
+  <h1>静态页面 / 部署 / 判题<br><em>三件事到底是什么关系</em></h1>
+  <p class="lead">
+    一句话先说清：<b>静态页面是「东西本身」，部署是「把东西放到别人拿得到的地方」，判题是「一台会真的跑代码的机器」。</b>
+    三者不是三种软件，是同一套东西的三个位置。
+  </p>
+
+  <!-- 1 三张定义 -->
+  <div class="sec">
+    <div class="sec-title"><div class="sec-no">1</div><h2>三件事，各自是什么</h2></div>
+    <div class="trio-def">
+
+      <div class="def g">
+        <span class="def-tag">东西本身</span>
+        <h3>静态页面</h3>
+        <div class="one">一堆文件，不会「运行」</div>
+        <p>就是 <code>index.html</code>、<code>app.js</code>、<code>styles.css</code>，加上 <code>assets/</code> 里 164MB 的宠物图和场景图。
+        浏览器拿到它们，只是「显示出来」；分数、战斗、洛克贝全在你浏览器里算。</p>
+        <p style="margin-top:10px">你双击 <code>index.html</code> 就能玩，是因为这些文件全在你自己的硬盘上。</p>
+      </div>
+
+      <div class="def a">
+        <span class="def-tag">放到哪</span>
+        <h3>部署</h3>
+        <div class="one">把同一批文件搬到服务器上</div>
+        <p>复制到服务器的 <code>/srv/game</code>，再装一个叫 nginx 的程序，专门干一件事：<b>有人来要文件，就给他发过去</b>。</p>
+        <p style="margin-top:10px">代码一个字都不用改。改的只是「文件放在哪」和「谁负责发」。</p>
+      </div>
+
+      <div class="def gr">
+        <span class="def-tag">谁来算</span>
+        <h3>判题</h3>
+        <div class="one">一台真的会编译、会运行 C++ 的机器</div>
+        <p>学生点「编译运行」，代码被发到服务器的容器里，用 gcc 编译、跑 2 秒、把输出和报错发回来。</p>
+        <p style="margin-top:10px">你电脑上没有 Linux 和 gcc，也没法让 60 个学生的代码在你机器上跑——<b>所以这件事只能在服务器做</b>。</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2 现在 -->
+  <div class="sec">
+    <div class="sec-title"><div class="sec-no">2</div><h2>现在是什么样：只有你自己的电脑</h2></div>
+    <div class="mini">
+      <div class="mini-row">
+        <div class="chip"><div class="t">你的 Windows 电脑</div><div class="s">文件夹 D:\上课游戏</div></div>
+        <div class="ar">→</div>
+        <div class="chip"><div class="t">双击 index.html</div><div class="s">浏览器用 file:// 打开</div></div>
+        <div class="ar">→</div>
+        <div class="chip"><div class="t">游戏能玩</div><div class="s">走本地磁盘，不联网</div></div>
+        <div class="ar">→</div>
+        <div class="chip" style="background:#fef2f2;border-color:#fecaca"><div class="t">只有你一个人</div><div class="s">别的电脑打不开</div></div>
+      </div>
+      <div class="mini-foot"><span class="x">×</span>
+        <span>为什么别的电脑打不开？<code style="font-family:Consolas,monospace">D:\上课游戏</code> 是你硬盘上的路径。别人的浏览器认的是「一个网址」，不是你的硬盘。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 主图 -->
+  <div class="sec">
+    <div class="sec-title"><div class="sec-no">3</div><h2>部署 + 判题之后，整条链路长这样</h2></div>
+    <div class="arch">
+
+      <div class="node n-client">
+        学生 / 家长 / 老师 的浏览器 —— 几十台，在教室或家里
+        <small>他们只认一个地址：https://你的域名</small>
+      </div>
+
+      <div class="lane">
+        <div class="vline"></div>
+        <div class="vcap">① 打开网页，走 443 端口，全站 HTTPS</div>
+        <div class="vline"></div>
+        <div class="varrow"></div>
+      </div>
+
+      <div class="server">
+        <div class="server-hd">
+          <div class="dot"></div>
+          <div class="nm">云服务器　2核4G5M</div>
+          <div class="meta">境内 · 已备案 · 一台机器干三件事</div>
+        </div>
+
+        <div class="node n-nginx">
+          nginx —— 唯一对公网开门的门卫
+          <small>它按网址里的路径，把请求分到三个不同的出口</small>
+        </div>
+
+        <div class="branches">
+          <div class="branch">
+            <div class="blabel">/</div>
+            <div class="vline" style="height:14px"></div>
+            <div class="node n-static">
+              静态文件目录 /srv/game
+              <small>index.html / app.js / assets 164MB</small>
+            </div>
+            <div class="capnote">↑ 文件放到这里，就叫「部署」</div>
+          </div>
+          <div class="branch">
+            <div class="blabel">/preview/</div>
+            <div class="vline" style="height:14px"></div>
+            <div class="node n-preview">
+              Dev-C++ 预览页
+              <small>也是静态文件，长得像 Dev-C++</small>
+            </div>
+          </div>
+          <div class="branch">
+            <div class="blabel">/judge/</div>
+            <div class="vline" style="height:14px"></div>
+            <div class="node n-judge">
+              判题服务 127.0.0.1:8000
+              <small>只监听本机，公网访问不到</small>
+            </div>
+            <div class="vline" style="height:16px"></div>
+            <div class="varrow"></div>
+            <div class="node n-docker" style="margin-top:6px">
+              Docker 沙箱 · gcc 9.3 · 编译 + 运行 2 秒
+              <small>无网络 / 只读根 / 256M 内存 / 非 root / 进程数 64</small>
+              <span class="tagline">学生代码只能待在这里面</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lane" style="padding-top:16px">
+        <div class="varrow" style="transform:rotate(180deg);border-top-color:#94a3b8"></div>
+        <div class="vcap">② 结果原路返回：JSON → 黑窗显示 stdout / 报错 / 耗时</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 三阶段 -->
+  <div class="sec">
+    <div class="sec-title"><div class="sec-no">4</div><h2>三个阶段，能力是这样长出来的</h2></div>
+    <div class="steps">
+
+      <div class="step s0">
+        <div class="no">阶段 0 · 现在</div>
+        <h4>只有本机</h4>
+        <div class="d">文件在 <code>D:\上课游戏</code>，双击 <code>file://</code> 打开。<br>能玩，但只能你自己玩。</div>
+        <div class="res">能力：一个人备课、试玩</div>
+      </div>
+      <div class="sarrow">→</div>
+
+      <div class="step s1">
+        <div class="no">阶段 1 · 部署</div>
+        <h4>静态页面上了服务器</h4>
+        <div class="d">同一批文件复制到 <code>/srv/game</code>，nginx 对外发文件。<br>代码没改，只是多了一个「公网上的家」。</div>
+        <div class="res">能力：全机构的电脑都能打开游戏</div>
+      </div>
+      <div class="sarrow">→</div>
+
+      <div class="step s2">
+        <div class="no">阶段 2 · 接判题</div>
+        <h4>预览页会真编译了</h4>
+        <div class="d">预览页点「运行」不再假装成功，而是发到 <code>/judge/run</code>，容器里真跑一遍 gcc。</div>
+        <div class="res">能力：学生看到真报错、真结果、真耗时</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 5 误解 -->
+  <div class="sec">
+    <div class="sec-title"><div class="sec-no">5</div><h2>四个最容易搞混的地方</h2></div>
+    <div class="myths">
+
+      <div class="myth">
+        <div class="ic">×</div>
+        <div>
+          <div class="w">部署 = 把代码重新写一遍</div>
+          <div class="r"><b>不是。</b>就是把同一批文件 <code>git clone</code> 到服务器，再装 nginx。你本地那份和服务器那份内容完全一样。</div>
+        </div>
+      </div>
+
+      <div class="myth">
+        <div class="ic">×</div>
+        <div>
+          <div class="w">本地双击能玩，所以不用服务器</div>
+          <div class="r"><b>不是。</b>你玩的是「自己硬盘上的文件」。服务器的作用是给别人的浏览器一个能打开的地址。</div>
+        </div>
+      </div>
+
+      <div class="myth">
+        <div class="ic">×</div>
+        <div>
+          <div class="w">Dev-C++ 预览页就是判题</div>
+          <div class="r"><b>不是。</b>预览页只是「遥控器」：长得像 Dev-C++，负责发代码、显示结果。真编译在服务器容器里。</div>
+        </div>
+      </div>
+
+      <div class="myth">
+        <div class="ic">×</div>
+        <div>
+          <div class="w">60 个人用，多买几台机器就行</div>
+          <div class="r"><b>不是。</b>先卡的是带宽（164MB 素材）、判题并发、同屏 50 人上限。这些先解决，再谈加机器。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 6 表 -->
+  <div class="sec">
+    <div class="sec-title"><div class="sec-no">6</div><h2>你想要的，对应需要什么</h2></div>
+    <table>
+      <thead><tr><th style="width:30%">你想干的事</th><th style="width:44%">需要什么</th><th>花钱</th></tr></thead>
+      <tbody>
+        <tr><td class="k">自己电脑上备课、试玩</td><td class="m">什么都不用，双击 <code>index.html</code></td><td><span class="pill z">0</span></td></tr>
+        <tr><td class="k">让机构别的电脑打开游戏</td><td class="m">部署：一台服务器 + nginx</td><td><span class="pill y">188 / 年</span></td></tr>
+        <tr><td class="k">学生点「运行」看到真结果</td><td class="m">部署 + 判题服务 + gcc 容器（同一台机器）</td><td><span class="pill z">0 额外</span></td></tr>
+        <tr><td class="k">学生回家也能玩</td><td class="m">域名 + ICP 备案（等约 3 周）</td><td><span class="pill y">55～80</span></td></tr>
+        <tr><td class="k">只在教室里用</td><td class="m">一台内网机器就够，不用域名、不用备案</td><td><span class="pill g">0～几百</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    <b>记住一条线就够了：</b>文件 → 搬到服务器（部署）→ 有人来要就发给他 → 学生点运行时，请求拐进判题容器算一遍再回来。
+    部署解决「能不能打开」，判题解决「能不能真跑」，这两件事都不改你的游戏代码。
+  </div>
+
+</div>
+</body>
+</html>

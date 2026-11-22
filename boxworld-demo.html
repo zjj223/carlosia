@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>卡罗西亚大陆 · 世界地图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    overflow: hidden;
+    user-select: none;
+    background: #0a1520;
+  }
+
+  .world-wrap {
+    position: fixed; inset: 0;
+    overflow: hidden;
+    background: #9fd8f0;
+  }
+
+  .world-stage {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 1600px; height: 900px;
+    transform-origin: center center;
+  }
+
+  .map-bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+  }
+
+  .region {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    z-index: 3;
+  }
+
+  .pin {
+    position: relative;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.93);
+    border: 3px solid #ffffff;
+    box-shadow: 0 6px 16px rgba(0,0,0,.32), 0 0 0 5px rgba(255,255,255,.22);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    transition: transform .16s, box-shadow .16s;
+  }
+  .pin::after {
+    content: '';
+    position: absolute;
+    inset: -9px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.55);
+    animation: pulse 2.4s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes pulse {
+    0%   { transform: scale(.86); opacity: .85; }
+    70%  { transform: scale(1.34); opacity: 0; }
+    100% { transform: scale(1.34); opacity: 0; }
+  }
+
+  .rname {
+    font-size: 12.5px; font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 11px;
+    background: rgba(20,42,28,.78);
+    color: #f2ffe6;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,.22);
+  }
+  .rmeta {
+    font-size: 10px;
+    color: rgba(255,255,255,.92);
+    background: rgba(20,42,28,.55);
+    padding: 2px 7px;
+    border-radius: 8px;
+    white-space: nowrap;
+    margin-top: -2px;
+  }
+
+  .region:hover .pin { transform: scale(1.2) translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,.38), 0 0 0 8px rgba(255,255,255,.3); }
+  .region:hover .rname { background: rgba(34,74,42,.92); }
+
+  .world-hud {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 16px 20px;
+    z-index: 20;
+    pointer-events: none;
+  }
+  .wh-title {
+    display: block;
+    font-size: 21px; font-weight: 800;
+    letter-spacing: 2px;
+    color: #10301e;
+    text-shadow: 0 2px 10px rgba(255,255,255,.85), 0 0 20px rgba(255,255,255,.6);
+  }
+  .wh-sub {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #27503a;
+    text-shadow: 0 1px 8px rgba(255,255,255,.9);
+  }
+  .hud-chip {
+    padding: 7px 12px;
+    border-radius: 11px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(255,255,255,.95);
+    font-size: 12.5px;
+    color: #1c3a26;
+    backdrop-filter: blur(6px);
+  }
+  .hud-chip b { color: #b06a00; font-weight: 700; }
+
+  .world-tip {
+    position: fixed; bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 12.5px;
+    color: #1d4530;
+    background: rgba(255,255,255,.72);
+    border: 1px solid rgba(255,255,255,.95);
+    padding: 7px 16px;
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    z-index: 20;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .scene-wrap { position: fixed; inset: 0; display: none; }
+  .scene-wrap.on {
+    display: block;
+    animation: zoomIn .38s ease-out;
+  }
+  @keyframes zoomIn {
+    from { transform: scale(1.07); opacity: .55; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  .stage-wrap2 { position: absolute; inset: 0; display: grid; place-items: center; background: #0d1a10; }
+  .stage {
+    position: relative;
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .stage img.bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+  }
+
+  .spot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px;
+    z-index: 3;
+    cursor: pointer;
+  }
+  .spot .dot {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,.85);
+    border: 3px solid rgba(255,255,255,.95);
+    box-shadow: 0 4px 14px rgba(0,0,0,.3), 0 0 0 6px rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: transform .18s, box-shadow .18s;
+  }
+  .spot .tag {
+    font-size: 12px; line-height: 1;
+    padding: 4px 9px;
+    border-radius: 11px;
+    background: rgba(24,38,24,.74);
+    color: #f2ffe8;
+    white-space: nowrap;
+    opacity: .8;
+    transition: opacity .18s;
+  }
+  .spot:hover .dot { transform: scale(1.16); box-shadow: 0 6px 18px rgba(0,0,0,.36), 0 0 0 8px rgba(255,255,255,.24); }
+  .spot:hover .tag { opacity: 1; }
+  .spot.is-target .dot { background: #fff8c9; border-color: #ffe45e; }
+
+  .player {
+    position: absolute;
+    height: 16%;
+    transform: translate(-50%, -100%);
+    z-index: 5;
+    pointer-events: none;
+    transform-origin: 50% 100%;
+  }
+  .player img {
+    height: 100%; width: auto; display: block;
+    transform-origin: 50% 90%;
+    transition: transform .12s;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,.3));
+  }
+  .player img.walking { animation: hop .32s infinite; }
+  @keyframes hop {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    35%      { transform: translateY(-5px) rotate(-1.5deg); }
+    70%      { transform: translateY(-1px) rotate(1deg); }
+  }
+
+  .pet {
+    position: absolute;
+    height: 7.5%;
+    transform: translate(-50%, -100%);
+    z-index: 4;
+    pointer-events: none;
+    opacity: .96;
+  }
+  .pet img {
+    height: 100%; width: auto; display: block;
+    transform-origin: 50% 90%;
+    filter: drop-shadow(0 4px 5px rgba(0,0,0,.26));
+  }
+
+  .ripple {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.9);
+    transform: translate(-50%, -50%) scale(1);
+    animation: ripple .55s ease-out forwards;
+    pointer-events: none;
+    z-index: 6;
+  }
+  @keyframes ripple {
+    to { transform: translate(-50%,-50%) scale(3.2); opacity: 0; }
+  }
+
+  .hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 18px;
+    z-index: 20;
+    pointer-events: none;
+    font-size: 13px;
+    color: #f0ffe6;
+  }
+  .hud-left { display: flex; align-items: center; gap: 10px; }
+  .hud-right { display: flex; align-items: center; gap: 8px; }
+  .hud-btn {
+    pointer-events: auto;
+    font: inherit; font-size: 13px;
+    padding: 7px 13px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.28);
+    background: rgba(20,34,20,.62);
+    color: #f0ffe6;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: background .18s;
+  }
+  .hud-btn:hover { background: rgba(50,80,44,.8); }
+  .scene-name {
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: rgba(20,34,20,.5);
+    backdrop-filter: blur(6px);
+    letter-spacing: .5px;
+  }
+  .dark-chip {
+    padding: 6px 11px;
+    border-radius: 10px;
+    background: rgba(20,34,20,.5);
+    backdrop-filter: blur(6px);
+  }
+  .dark-chip b { color: #ffe45e; font-weight: 600; }
+
+  .tip {
+    position: fixed; bottom: 14px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 12.5px;
+    color: rgba(240,255,230,.75);
+    background: rgba(14,26,16,.58);
+    padding: 7px 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    z-index: 20;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .result {
+    position: fixed; inset: 0;
+    display: none;
+    place-items: center;
+    background: rgba(8,18,10,.52);
+    backdrop-filter: blur(3px);
+    z-index: 30;
+  }
+  .result.show { display: grid; }
+  .result-card {
+    width: min(420px, 86vw);
+    background: linear-gradient(180deg, #fbffe9, #eef7d8);
+    border-radius: 20px;
+    border: 3px solid #a8d06a;
+    box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    padding: 22px 22px 18px;
+    text-align: center;
+  }
+  .r-title { font-size: 19px; font-weight: 700; color: #2f4a1c; letter-spacing: .5px; }
+  .r-desc { margin-top: 8px; font-size: 13.5px; color: #5b6f45; line-height: 1.6; }
+  .r-gain {
+    margin-top: 14px;
+    display: inline-block;
+    font-size: 17px; font-weight: 700;
+    color: #2f4a1c;
+    background: #dff2b4;
+    border: 2px solid #a8d06a;
+    border-radius: 12px;
+    padding: 8px 18px;
+  }
+  .r-battle {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #b4451f;
+    font-weight: 600;
+  }
+  .r-btn {
+    margin-top: 16px;
+    width: 100%;
+    font: inherit; font-size: 15px; font-weight: 600;
+    padding: 11px 0;
+    border: none; border-radius: 12px;
+    background: linear-gradient(180deg, #8fd14e, #63b02c);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #4e8c22;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .r-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4e8c22; }
+</style>
+</head>
+<body>
+
+<div class="world-wrap" id="worldWrap">
+  <div class="world-stage" id="worldStage">
+    <img class="map-bg" src="assets/boxworld/map-continent.webp" alt="卡罗西亚大陆" draggable="false" />
+    <div id="regions"></div>
+  </div>
+
+  <div class="world-hud">
+    <div>
+      <span class="wh-title">卡罗西亚大陆</span>
+      <span class="wh-sub">点击地图上的区域，进入那片土地</span>
+    </div>
+    <div>
+      <span class="hud-chip">经验 <b id="wExp">0</b></span>
+    </div>
+  </div>
+
+  <div class="world-tip">十个区域 · 越往深处越危险</div>
+</div>
+
+<div class="scene-wrap" id="sceneWrap">
+  <div class="stage-wrap2">
+    <div class="stage" id="stage">
+      <img class="bg" id="sceneBg" src="assets/boxworld/scene-grassland.webp" alt="" draggable="false" />
+      <div id="spots"></div>
+
+      <div class="player" id="player">
+        <img id="playerImg" src="assets/boxworld/trainer-boy-sprite.png" alt="" draggable="false" />
+      </div>
+
+      <div class="pet" id="pet">
+        <img id="petImg" src="assets/pets/all/black-cat/stage-1.png" alt="" draggable="false" />
+      </div>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-left">
+      <button class="hud-btn" id="backBtn">← 返回大陆</button>
+      <span class="scene-name" id="sceneName">轻风草原</span>
+    </div>
+    <div class="hud-right">
+      <span class="dark-chip">经验 <b id="expVal">0</b></span>
+      <span class="dark-chip">探索 <b id="cntVal">0</b> 次</span>
+    </div>
+  </div>
+
+  <div class="tip" id="tipText">点光点探索 · 点空地随便跑</div>
+</div>
+
+<div class="result" id="result">
+  <div class="result-card">
+    <div class="r-title" id="rTitle">—</div>
+    <div class="r-desc" id="rDesc">—</div>
+    <div class="r-gain" id="rGain">+0 经验</div>
+    <div class="r-battle" id="rBattle"></div>
+    <button class="r-btn" id="rBtn">继续探索</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SPOT_XY = [[26, 76], [78, 47], [64, 26], [38, 63], [55, 21], [8, 55]];
+
+  var SCENES = [
+    {
+      id: 'grassland', name: '轻风草原', element: '草系', tag: '新手村', emoji: '🌿',
+      mx: 16, my: 68, exp: [7, 112], img: 'assets/boxworld/scene-grassland.webp',
+      spots: [
+        { name: '草地深处', exp: [7, 30],   desc: '茂密的草地随风起伏，藏着不少小玩意。' },
+        { name: '溪流边',   exp: [22, 45],  desc: '清澈的小溪潺潺流过，水面泛着光。' },
+        { name: '风车下',   exp: [37, 60],  desc: '古老的风车缓缓转动，风声悦耳。' },
+        { name: '花海',     exp: [52, 75],  desc: '五颜六色的野花盛开，蝴蝶翩翩起舞。' },
+        { name: '小山坡',   exp: [67, 90],  desc: '登上坡顶可以俯瞰整个草原。' },
+        { name: '神秘树洞', exp: [90, 112], desc: '巨大的老树洞里似乎藏着什么秘密。' }
+      ]
+    },
+    {
+      id: 'volcano', name: '维苏威火山', element: '火系', tag: '进阶', emoji: '🔥',
+      mx: 38, my: 45, exp: [75, 187], img: 'assets/boxworld/scene-volcano.webp',
+      spots: [
+        { name: '火山灰原',   exp: [75, 97],   desc: '灰色的火山灰铺满大地，松软异常。' },
+        { name: '熔岩口',     exp: [97, 120],  desc: '滚烫的岩浆翻涌，热浪扑面而来。' },
+        { name: '炭窑遗址',   exp: [112, 135], desc: '废弃的炭窑还冒着余烟，飘着焦香。' },
+        { name: '岩浆池',     exp: [127, 150], desc: '炽热的岩浆咕嘟冒泡，映红了天空。' },
+        { name: '火岩区',     exp: [142, 165], desc: '黑色的火山岩遍地，行走困难。' },
+        { name: '火山口深处', exp: [165, 187], desc: '越往下越热，传说有火之精灵栖息。' }
+      ]
+    },
+    {
+      id: 'mermaid-bay', name: '人鱼湾', element: '水系', tag: '中级', emoji: '🌊',
+      mx: 82, my: 52, exp: [150, 262], img: 'assets/boxworld/scene-bay.webp',
+      spots: [
+        { name: '浅滩',     exp: [150, 172], desc: '温暖的浅海水清澈见底，鱼儿游过。' },
+        { name: '珊瑚礁',   exp: [165, 187], desc: '五彩的珊瑚丛中藏着各种宝贝。' },
+        { name: '沉船残骸', exp: [180, 202], desc: '古老的沉船静静躺在海底，神秘莫测。' },
+        { name: '深海洞穴', exp: [195, 217], desc: '幽暗的海底洞穴，回声阵阵。' },
+        { name: '海草森林', exp: [210, 232], desc: '巨大的海草随波摇曳，像水下森林。' },
+        { name: '海底神殿', exp: [232, 262], desc: '传说中的人鱼神殿，布满珍珠。' }
+      ]
+    },
+    {
+      id: 'academy', name: '皇家研究院', element: '光系', tag: '高级', emoji: '🔬',
+      mx: 66, my: 84, exp: [225, 337], img: 'assets/boxworld/scene-academy.webp',
+      spots: [
+        { name: '图书馆',   exp: [225, 247], desc: '高耸的书架直达天花板，书香弥漫。' },
+        { name: '实验室',   exp: [240, 262], desc: '瓶瓶罐罐摆满桌面，研究员正在忙碌。' },
+        { name: '天文台',   exp: [255, 277], desc: '巨大的望远镜指向星空，繁星闪烁。' },
+        { name: '炼金工坊', exp: [270, 292], desc: '熔炉里炼着各种神奇的材料。' },
+        { name: '魔法教室', exp: [285, 307], desc: '学生们在这里学习基础魔法。' },
+        { name: '禁忌书架', exp: [307, 337], desc: '封锁的区域，藏着古老的禁忌知识。' }
+      ]
+    },
+    {
+      id: 'snow-valley', name: '雪人谷', element: '冰系', tag: '专家', emoji: '❄️',
+      mx: 19, my: 22, exp: [300, 412], img: 'assets/boxworld/scene-snow.webp',
+      spots: [
+        { name: '雪原',     exp: [300, 322], desc: '一望无际的雪原，脚下咯吱作响。' },
+        { name: '冰洞',     exp: [315, 337], desc: '晶莹的冰洞散发着幽蓝的光，寒气逼人。' },
+        { name: '极光台',   exp: [330, 352], desc: '仰望天空，绚丽的极光缓缓流动。' },
+        { name: '冰封湖',   exp: [345, 367], desc: '湖面冻得结结实实，可以滑冰。' },
+        { name: '雪山顶',   exp: [360, 382], desc: '爬上山顶，寒风凛冽但风景绝佳。' },
+        { name: '冰晶宫殿', exp: [382, 412], desc: '传说中冰之女王的宫殿，闪耀夺目。' }
+      ]
+    },
+    {
+      id: 'thunder-valley', name: '雷鸣峡谷', element: '电系', tag: '大师', emoji: '⚡',
+      mx: 45, my: 56, exp: [375, 525], img: 'assets/boxworld/scene-thunder.webp',
+      spots: [
+        { name: '峡谷入口', exp: [375, 397], desc: '两侧峭壁高耸，远处传来隐隐雷声。' },
+        { name: '雷电场',   exp: [390, 420], desc: '空气中弥漫着电荷，毛发都会竖起来。' },
+        { name: '闪电石',   exp: [405, 435], desc: '被闪电劈中的巨石，表面还带着电弧。' },
+        { name: '风暴台',   exp: [420, 450], desc: '峡谷中央的高台，风暴在此汇聚。' },
+        { name: '雷霆崖',   exp: [435, 480], desc: '悬崖边雷声滚滚，震耳欲聋。' },
+        { name: '雷神殿',   exp: [480, 525], desc: '传说中雷神居住的殿堂，电光四射。' }
+      ]
+    },
+    {
+      id: 'shadow-forest', name: '幽暗森林', element: '幽系', tag: '宗师', emoji: '🌲',
+      mx: 71, my: 44, exp: [450, 637], img: 'assets/boxworld/scene-shadow.webp',
+      spots: [
+        { name: '森林边缘',   exp: [450, 480], desc: '阳光在这里变得微弱，气氛诡异。' },
+        { name: '幽暗小径',   exp: [465, 510], desc: '两旁的树木遮天蔽日，看不清前路。' },
+        { name: '古老墓地',   exp: [487, 540], desc: '散落着古老的墓碑，偶尔传来低语。' },
+        { name: '闹鬼小屋',   exp: [510, 570], desc: '废弃的小屋，窗户里似乎有影子晃动。' },
+        { name: '森林深处',   exp: [540, 600], desc: '越往里走越黑暗，幽灵出没频繁。' },
+        { name: '幽灵王城堡', exp: [600, 637], desc: '传说中幽灵王的居所，阴气冲天。' }
+      ]
+    },
+    {
+      id: 'dark-swamp', name: '暗影沼泽', element: '恶系', tag: '噩梦', emoji: '🌫️',
+      mx: 50, my: 24, exp: [525, 750], img: 'assets/boxworld/scene-swamp.webp',
+      spots: [
+        { name: '沼泽边缘', exp: [525, 562], desc: '泥泞的土地散发着腐臭的气息。' },
+        { name: '毒水池',   exp: [547, 600], desc: '碧绿的毒水冒着泡，碰之即伤。' },
+        { name: '腐木林',   exp: [570, 630], desc: '腐烂的树木扭曲成诡异的形状。' },
+        { name: '毒蛇巢穴', exp: [600, 667], desc: '无数毒蛇盘踞的洞穴，危险至极。' },
+        { name: '黑暗湖',   exp: [637, 712], desc: '漆黑的湖水深不见底，藏着怪物。' },
+        { name: '邪恶祭坛', exp: [712, 750], desc: '沼泽深处的神秘祭坛，散发恶意。' }
+      ]
+    },
+    {
+      id: 'dragon-realm', name: '龙之秘境', element: '龙系', tag: '传说', emoji: '🐉',
+      mx: 77, my: 20, exp: [600, 862], img: 'assets/boxworld/scene-dragon.webp',
+      spots: [
+        { name: '龙门',       exp: [600, 637], desc: '巨大的石门上刻着龙族的图腾。' },
+        { name: '熔岩龙巢',   exp: [622, 675], desc: '炽热的龙巢，岩浆缓缓流淌。' },
+        { name: '龙骨荒原',   exp: [652, 712], desc: '遍地都是远古巨龙的骸骨。' },
+        { name: '宝藏洞穴',   exp: [682, 750], desc: '龙族收集的宝藏堆积如山。' },
+        { name: '龙之峰',     exp: [720, 810], desc: '群龙栖息的高峰，龙威浩荡。' },
+        { name: '龙王殿',     exp: [810, 862], desc: '传说中龙王的宫殿，金碧辉煌。' }
+      ]
+    },
+    {
+      id: 'sky-city', name: '天空之城', element: '翼系', tag: '神话', emoji: '🏛️',
+      mx: 53, my: 9, exp: [675, 975], img: 'assets/boxworld/scene-sky.webp',
+      spots: [
+        { name: '云梯',       exp: [675, 720], desc: '通往天空之城的云朵阶梯。' },
+        { name: '浮空花园',   exp: [705, 765], desc: '漂浮在云端的美丽花园。' },
+        { name: '风之神殿',   exp: [735, 802], desc: '供奉风神的古老神殿。' },
+        { name: '百鸟宫殿',   exp: [772, 847], desc: '无数神鸟栖息的华丽宫殿。' },
+        { name: '雷霆台',     exp: [817, 900], desc: '云层之上的高台，雷电交加。' },
+        { name: '天神王座',   exp: [900, 975], desc: '传说中天神的王座，光芒万丈。' }
+      ]
+    }
+  ];
+
+  var worldWrap = document.getElementById('worldWrap');
+  var worldStage = document.getElementById('worldStage');
+  var regionsBox = document.getElementById('regions');
+  var wExp = document.getElementById('wExp');
+
+  var sceneWrap = document.getElementById('sceneWrap');
+  var sceneBg = document.getElementById('sceneBg');
+  var sceneName = document.getElementById('sceneName');
+  var stage = document.getElementById('stage');
+  var spotsBox = document.getElementById('spots');
+  var player = document.getElementById('player');
+  var playerImg = document.getElementById('playerImg');
+  var pet = document.getElementById('pet');
+  var petImg = document.getElementById('petImg');
+  var expVal = document.getElementById('expVal');
+  var cntVal = document.getElementById('cntVal');
+  var backBtn = document.getElementById('backBtn');
+  var tipText = document.getElementById('tipText');
+
+  var result = document.getElementById('result');
+  var rTitle = document.getElementById('rTitle');
+  var rDesc = document.getElementById('rDesc');
+  var rGain = document.getElementById('rGain');
+  var rBattle = document.getElementById('rBattle');
+  var rBtn = document.getElementById('rBtn');
+
+  function fitWorld() {
+    var s = Math.min(innerWidth / 1600, innerHeight / 900);
+    worldStage.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
+  }
+  fitWorld();
+  addEventListener('resize', fitWorld);
+
+  SCENES.forEach(function (s) {
+    var el = document.createElement('div');
+    el.className = 'region';
+    el.style.left = s.mx + '%';
+    el.style.top = s.my + '%';
+    el.innerHTML =
+      '<div class="pin">' + s.emoji + '</div>' +
+      '<div class="rname">' + s.name + '</div>' +
+      '<div class="rmeta">' + s.tag + ' · ' + s.exp[0] + '-' + s.exp[1] + '</div>';
+    el.addEventListener('click', function () { enterScene(s); });
+    regionsBox.appendChild(el);
+
+    var im = new Image();
+    im.src = s.img;
+  });
+
+  var ASP = 16 / 9;
+  var WALK_SPEED = 0.30;
+  var PET_GAP = 0.085;
+  var PET_SPEED = 0.34;
+
+  var px = 0.50, py = 0.68;
+  var petX = 0.445, petY = 0.685;
+  var tx = px, ty = py;
+  var timerId = null;
+  var lastTime = 0;
+  var pendingSpot = null;
+  var spots = [];
+  var currentScene = null;
+
+  var exp = 0, exploreCount = 0;
+
+  function randInt(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function realDist(x1, y1, x2, y2) { return Math.hypot((x2 - x1) * ASP, y2 - y1); }
+
+  function renderPlayer() {
+    player.style.left = (px * 100) + '%';
+    player.style.top = (py * 100) + '%';
+  }
+  function renderPet() {
+    pet.style.left = (petX * 100) + '%';
+    pet.style.top = (petY * 100) + '%';
+  }
+
+  function buildSpots(s) {
+    spotsBox.innerHTML = '';
+    pendingSpot = null;
+    spots = s.spots.map(function (sp, i) {
+      var xy = SPOT_XY[i];
+      var el = document.createElement('div');
+      el.className = 'spot';
+      el.style.left = xy[0] + '%';
+      el.style.top = xy[1] + '%';
+      el.innerHTML = '<div class="dot">' + s.emoji + '</div><div class="tag">' + sp.name + '</div>';
+
+      var obj = { name: sp.name, exp: sp.exp, desc: sp.desc, x: xy[0], y: xy[1], el: el };
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        walkTo(obj.x / 100, obj.y / 100, obj);
+      });
+      spotsBox.appendChild(el);
+      return obj;
+    });
+  }
+
+  function enterScene(s) {
+    currentScene = s;
+    sceneName.textContent = s.name + ' · ' + s.tag;
+    sceneBg.src = s.img;
+    tipText.textContent = s.element + ' · 经验 ' + s.exp[0] + '-' + s.exp[1] + ' · 点光点探索';
+
+    px = 0.50; py = 0.68;
+    petX = 0.445; petY = 0.685;
+    tx = px; ty = py;
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    playerImg.classList.remove('walking');
+    playerImg.style.transform = 'scaleX(1)';
+    renderPlayer();
+    renderPet();
+
+    buildSpots(s);
+    worldWrap.style.display = 'none';
+    sceneWrap.classList.add('on');
+  }
+
+  function exitScene() {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    playerImg.classList.remove('walking');
+    pendingSpot = null;
+    spotsBox.innerHTML = '';
+    spots = [];
+    sceneWrap.classList.remove('on');
+    worldWrap.style.display = 'block';
+  }
+
+  function walkTo(nx, ny, spot) {
+    tx = nx; ty = ny;
+    pendingSpot = spot || null;
+    spots.forEach(function (sp) { sp.el.classList.toggle('is-target', sp === pendingSpot); });
+    if (!timerId) {
+      lastTime = performance.now();
+      playerImg.classList.add('walking');
+      timerId = setInterval(step, 16);
+    }
+  }
+
+  function step() {
+    var now = performance.now();
+    var dt = Math.min(0.06, (now - lastTime) / 1000) || 0.016;
+    lastTime = now;
+
+    var ux = (tx - px) * ASP, uy = (ty - py);
+    var d = Math.hypot(ux, uy);
+    var len = WALK_SPEED * dt;
+
+    if (d <= len || d < 0.004) {
+      px = tx; py = ty;
+      playerImg.classList.remove('walking');
+      renderPlayer();
+      petFollow(dt, true);
+
+      if (timerId) { clearInterval(timerId); timerId = null; }
+
+      var arrived = pendingSpot;
+      pendingSpot = null;
+      spots.forEach(function (sp) { if (sp.el) sp.el.classList.remove('is-target'); });
+      if (arrived) explore(arrived);
+      return;
+    }
+
+    px += (ux / d) * len / ASP;
+    py += (uy / d) * len;
+    playerImg.style.transform = ux < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+    renderPlayer();
+    petFollow(dt, false);
+  }
+
+  function petFollow(dt, snap) {
+    if (snap) {
+      petX = px - 0.055;
+      petY = py;
+      renderPet();
+      return;
+    }
+    var d = realDist(petX, petY, px, py);
+    if (d > PET_GAP) {
+      var ux = (px - petX) * ASP, uy = py - petY;
+      var dd = Math.hypot(ux, uy);
+      if (dd > 0.001) {
+        var mv = Math.min(dd, PET_SPEED * dt);
+        petX += (ux / dd) * mv / ASP;
+        petY += (uy / dd) * mv;
+        petImg.style.transform = ux < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+      }
+    }
+    renderPet();
+  }
+
+  stage.addEventListener('click', function (e) {
+    if (e.target.closest('.spot')) return;
+    var r = stage.getBoundingClientRect();
+    var nx = (e.clientX - r.left) / r.width;
+    var ny = (e.clientY - r.top) / r.height;
+    if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
+
+    var rp = document.createElement('div');
+    rp.className = 'ripple';
+    rp.style.left = (nx * 100) + '%';
+    rp.style.top = (ny * 100) + '%';
+    stage.appendChild(rp);
+    setTimeout(function () { rp.remove(); }, 600);
+
+    walkTo(nx, ny, null);
+  });
+
+  function explore(spot) {
+    var gain = randInt(spot.exp[0], spot.exp[1]);
+    var battle = Math.random() < 0.25;
+
+    exp += gain;
+    exploreCount += 1;
+    expVal.textContent = exp;
+    cntVal.textContent = exploreCount;
+    wExp.textContent = exp;
+
+    rTitle.textContent = '到达 · ' + spot.name;
+    rDesc.textContent = spot.desc;
+    rGain.textContent = '经验 +' + gain;
+    rBattle.textContent = battle ? '⚠ 附近的草丛里窜出一只野生宠物！准备战斗…' : '';
+    result.classList.add('show');
+  }
+
+  rBtn.addEventListener('click', function () { result.classList.remove('show'); });
+  backBtn.addEventListener('click', exitScene);
+
+  var KEY_STEP = 0.06;
+  document.addEventListener('keydown', function (e) {
+    if (!currentScene) return;
+    if (result.classList.contains('show')) return;
+    var dx = 0, dy = 0;
+    if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') dx = -1;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') dx = 1;
+    if (e.key === 'ArrowUp'    || e.key === 'w' || e.key === 'W') dy = -1;
+    if (e.key === 'ArrowDown'  || e.key === 's' || e.key === 'S') dy = 1;
+    if (!dx && !dy) return;
+    e.preventDefault();
+    var nx = Math.min(0.97, Math.max(0.03, px + dx * KEY_STEP));
+    var ny = Math.min(0.92, Math.max(0.08, py + dy * KEY_STEP));
+    walkTo(nx, ny, null);
+  });
+
+  renderPlayer();
+  renderPet();
+})();
+</script>
+</body>
+</html>

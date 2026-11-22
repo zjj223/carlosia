@@ -113,7 +113,7 @@ h2 {
 
 .app-grid {
   display: grid;
-  grid-template-columns: minmax(230px, 290px) minmax(0, 1fr) minmax(190px, 230px);
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(280px, 340px);
   align-items: start;
   gap: 18px;
   margin-top: 18px;
@@ -371,6 +371,43 @@ button:focus-visible {
   min-width: 0;
 }
 
+/* 游戏区：侧栏（宠物信息）+ 主区（场景/商店/排行榜） */
+.game-stage {
+  display: grid;
+  gap: 18px;
+}
+
+.game-sidebar,
+.game-main {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+}
+
+/* 学生端：桌面宽屏，侧栏固定右侧主区 */
+.app-grid.is-student {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app-grid.is-student .game-stage {
+  grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.app-grid.is-student .status-grid {
+  grid-template-columns: minmax(200px, 1fr) 150px minmax(230px, 300px);
+}
+
+.app-grid.is-student .pet-status-row {
+  align-items: flex-start;
+}
+
+.app-grid.is-student .pet-status-row .tile-note {
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
 .empty-state {
   display: grid;
   place-items: center;
@@ -382,6 +419,10 @@ button:focus-visible {
     var(--surface);
   box-shadow: var(--shadow);
   text-align: center;
+}
+
+.empty-state[hidden] {
+  display: none;
 }
 
 .empty-mark {
@@ -836,17 +877,57 @@ button:focus-visible {
   display: block;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
   .app-grid {
-    grid-template-columns: minmax(230px, 300px) 1fr;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+    grid-template-areas:
+      "teacher game"
+      "profile game";
+    grid-template-rows: max-content 1fr;
+    gap: 14px;
+    align-items: start;
   }
 
   .teacher-panel {
-    grid-column: 1 / -1;
+    grid-area: teacher;
+    position: static;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .profile-panel {
+    grid-area: profile;
+  }
+
+  .game-area {
+    grid-area: game;
+  }
+
+  .app-grid.is-student .profile-panel,
+  .app-grid.is-student .teacher-panel,
+  .app-grid.is-student .game-area {
+    grid-area: auto;
   }
 
   .scene-grid {
     grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+
+  .app-grid.is-student .game-stage {
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  }
+
+  .app-grid.is-student .status-grid {
+    grid-template-columns: minmax(180px, 1fr) 130px minmax(200px, 260px);
+  }
+}
+
+@media (min-width: 1281px) {
+  .teacher-panel {
+    position: sticky;
+    top: 18px;
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
   }
 }
 
@@ -875,6 +956,13 @@ button:focus-visible {
 
   .app-grid {
     display: grid;
+  }
+
+  .profile-panel,
+  .game-area,
+  .teacher-panel {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .scene-grid {
@@ -2546,6 +2634,34 @@ button:focus-visible {
   margin: 0 0 24px;
 }
 
+.login-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: #f2ece2;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.login-tab {
+  flex: 1;
+  padding: 9px 6px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6c6358;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.login-tab.is-active {
+  background: #fffdfa;
+  color: #2b2620;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .login-form {
   display: flex;
   flex-direction: column;
@@ -3032,159 +3148,233 @@ button:focus-visible {
   white-space: pre-line;
 }
 
-/* ===== 新手引导系统 ===== */
+/* ===== 新手引导系统（手指引导 + 功能卡） ===== */
 .guide-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  pointer-events: none;
 }
 
-.guide-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+.guide-block {
+  position: fixed;
+  background: rgba(24, 20, 12, 0.62);
+  transition: all 0.18s ease;
+  pointer-events: none;
 }
 
-.guide-modal {
-  position: relative;
-  background: white;
-  border-radius: 20px;
-  padding: 30px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: guideSlideIn 0.3s ease;
+.guide-ring {
+  position: fixed;
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 10002;
+  animation: guideRingPulse 1.8s ease-in-out infinite;
 }
 
-@keyframes guideSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
+@keyframes guideRingPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px #f0b429, 0 0 0 6px rgba(240, 180, 41, 0.28), 0 0 26px rgba(240, 180, 41, 0.55);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  50% {
+    box-shadow: 0 0 0 3px #ffd35c, 0 0 0 9px rgba(255, 211, 92, 0.35), 0 0 34px rgba(255, 211, 92, 0.7);
   }
 }
 
-.guide-header {
+.guide-tip {
+  position: fixed;
+  z-index: 10003;
+  pointer-events: auto;
+  width: 296px;
+  max-width: calc(100vw - 32px);
+  background: linear-gradient(150deg, #fffdf6, #fff3d6);
+  border: 1px solid #ecd9a8;
+  border-radius: 16px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 18px 44px rgba(60, 40, 10, 0.28);
+}
+
+.guide-tip-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 .guide-step {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
+  background: #f0b429;
+  color: #4a3208;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .guide-skip {
   background: none;
   border: none;
-  color: #999;
-  font-size: 14px;
+  color: #a08a63;
+  font-size: 13px;
   cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 6px;
-  transition: all 0.2s;
+  padding: 4px 8px;
+  border-radius: 8px;
 }
 
 .guide-skip:hover {
-  color: #666;
-  background: #f5f5f5;
+  color: #6b4a12;
+  background: rgba(107, 74, 18, 0.08);
 }
 
-.guide-content {
-  margin-bottom: 25px;
+.guide-tip-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #3f2c0d;
+  font-weight: 800;
 }
 
-.guide-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.guide-desc {
-  font-size: 15px;
-  line-height: 1.8;
-  color: #555;
-  margin-bottom: 15px;
-}
-
-.guide-highlight {
-  background: #f0f4ff;
-  border-left: 4px solid #667eea;
-  padding: 12px 16px;
-  border-radius: 8px;
+.guide-tip-desc {
+  margin: 0;
   font-size: 14px;
-  color: #4a5568;
+  line-height: 1.75;
+  color: #6b5a3a;
 }
 
-.guide-highlight:empty {
-  display: none;
-}
-
-.guide-footer {
+.guide-tip-actions {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .guide-btn {
-  flex: 1;
-  padding: 12px 20px;
   border: none;
   border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  padding: 9px 20px;
+  transition: all 0.18s;
 }
 
 .guide-btn.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #f7c948, #e0a020);
+  color: #4a3208;
 }
 
 .guide-btn.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(224, 160, 32, 0.35);
 }
 
 .guide-btn.secondary {
-  background: #f0f0f0;
-  color: #666;
-}
-
-.guide-btn.secondary:hover {
-  background: #e0e0e0;
+  background: #efe6d3;
+  color: #8a7350;
 }
 
 .guide-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
   transform: none !important;
 }
+
+.guide-cards-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10003;
+  pointer-events: auto;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: linear-gradient(160deg, #fffdf6, #fff4dc);
+  border: 1px solid #ecd9a8;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 24px 60px rgba(60, 40, 10, 0.32);
+}
+
+.guide-cards-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #8a7350;
+  margin-bottom: 10px;
+}
+
+.guide-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guide-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fffaf0;
+  border: 1px solid #f0e2c2;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.guide-card-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.guide-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3f2c0d;
+  margin-bottom: 2px;
+}
+
+.guide-card-sub {
+  font-size: 12.5px;
+  color: #8a7350;
+  line-height: 1.6;
+}
+
+.guide-cards-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #8a7350;
+}
+
+.guide-cards-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.guide-help-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 96px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #ecd9a8;
+  background: #fff6e2;
+  color: #a07b28;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 9000;
+  box-shadow: 0 4px 12px rgba(60, 40, 10, 0.16);
+}
+
+.guide-help-btn:hover {
+  background: #ffeec6;
+}
+
+@media (max-width: 520px) {
+  .guide-cards-wrap {
+    width: calc(100vw - 24px);
+  }
+}
+
 
 /* ===== 咕噜球商店美化 ===== */
 .ball-shop-grid {
@@ -3308,10 +3498,11 @@ button:focus-visible {
 }
 
 .shop-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #fff8e6 0%, #ffecc6 100%);
+  color: #6b4a12;
   padding: 20px;
   border-radius: 12px;
+  border: 1px solid #efdcae;
   margin-bottom: 16px;
 }
 
@@ -3327,7 +3518,8 @@ button:focus-visible {
 }
 
 .shop-header strong {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(107, 74, 18, 0.12);
+  color: #6b4a12;
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -3589,27 +3781,27 @@ button:active:not(:disabled) {
 /* ===== 智能提示 Toast ===== */
 .toast-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 14px;
+  right: 14px;
   z-index: 10000;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   pointer-events: none;
-  max-width: 360px;
+  max-width: 320px;
 }
 
 .toast {
   pointer-events: auto;
-  padding: 14px 18px;
-  border-radius: 12px;
+  padding: 9px 12px 10px;
+  border-radius: 10px;
   background: white;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  animation: toastSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-left: 4px solid #667eea;
+  gap: 8px;
+  animation: toastSlideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 3px solid #667eea;
   position: relative;
   overflow: hidden;
 }
@@ -3631,7 +3823,7 @@ button:active:not(:disabled) {
 }
 
 .toast-icon {
-  font-size: 22px;
+  font-size: 17px;
   flex-shrink: 0;
   margin-top: -2px;
 }
@@ -3642,13 +3834,13 @@ button:active:not(:disabled) {
 
 .toast-title {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .toast-message {
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
   line-height: 1.4;
 }
@@ -3656,7 +3848,7 @@ button:active:not(:disabled) {
 .toast-close {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 14px;
   color: #999;
   cursor: pointer;
   padding: 0;
@@ -3699,9 +3891,9 @@ button:active:not(:disabled) {
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg, #667eea, #764ba2);
-  animation: toastProgress 4s linear;
+  animation: toastProgress 2s linear;
 }
 
 @keyframes toastProgress {
@@ -4127,4 +4319,5009 @@ button:active:not(:disabled) {
   0% { transform: translateX(14px) scale(0.96); box-shadow: 0 0 0 0 rgba(255, 196, 0, 0); }
   45% { transform: translateX(0) scale(1.02); box-shadow: 0 0 0 3px rgba(255, 196, 0, 0.55); }
   100% { transform: translateX(0) scale(1); box-shadow: 0 0 0 0 rgba(255, 196, 0, 0); }
+}
+
+/* ===== 学生端：宠物栏改竖排紧凑卡片，3 只宠物也不横向溢出 ===== */
+.app-grid.is-student .pet-team-list {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  overflow-x: visible;
+  overflow-y: visible;
+  padding-bottom: 0;
+  gap: 8px;
+}
+
+.app-grid.is-student .pet-team-item {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-areas:
+    "pic name"
+    "pic bond"
+    "acts acts";
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 2px;
+}
+
+.app-grid.is-student .pet-team-header {
+  display: contents;
+}
+
+.app-grid.is-student .pet-team-img {
+  grid-area: pic;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.app-grid.is-student .pet-team-meta {
+  grid-area: name;
+  min-width: 0;
+}
+
+.app-grid.is-student .pet-team-meta .pet-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-grid.is-student .pet-team-meta .pet-team-level {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.app-grid.is-student .pet-team-bond {
+  grid-area: bond;
+  margin: 0;
+  font-size: 11px;
+  color: #e91e63;
+}
+
+.app-grid.is-student .pet-team-actions {
+  grid-area: acts;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.app-grid.is-student .pet-team-actions button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 5px 4px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.app-grid.is-student .pet-team-empty {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+/* ===== 学生端：窄窗口降级为单列，避免主区被压扁溢出 ===== */
+@media (max-width: 900px) {
+  .app-grid.is-student .game-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-grid.is-student .status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-grid.is-student .status-grid > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+/* ===== 箱庭大世界 · 大陆地图（新增） ===== */
+#sceneGrid.map-mode {
+  display: block;
+}
+
+.continent {
+  position: relative;
+  width: 100%;
+  max-width: 1180px;
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #9fd8f0;
+  box-shadow: 0 10px 26px rgba(20, 40, 30, 0.18);
+}
+
+.continent-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  z-index: 3;
+  font-family: inherit;
+}
+
+.map-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.24);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  transition: transform 0.16s ease;
+}
+
+.map-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #12311d;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 2px 8px;
+  border-radius: 9px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+}
+
+.map-meta {
+  font-size: 10px;
+  color: #1f4a2e;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 1px 6px;
+  border-radius: 7px;
+  white-space: nowrap;
+}
+
+.map-pin:hover:not(:disabled) .map-dot {
+  transform: scale(1.16) translateY(-2px);
+}
+
+.map-pin.selected .map-dot {
+  border-color: #ffd54f;
+  box-shadow: 0 0 0 5px rgba(255, 213, 79, 0.45);
+}
+
+.map-pin.locked {
+  filter: grayscale(1);
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.map-pin.locked .map-name {
+  color: #525252;
+}
+
+/* ===== 场景内 · 真实底图舞台 ===== */
+.scene-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #16261a;
+}
+
+.scene-stage-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.scene-stage-desc {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 0.84rem;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.55));
+  z-index: 2;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.stage-spot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  z-index: 3;
+  font-family: inherit;
+}
+
+.stage-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 5px rgba(255, 255, 255, 0.2);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  transition: transform 0.16s ease;
+}
+
+.stage-tag {
+  font-size: 11.5px;
+  color: #f2ffe8;
+  background: rgba(18, 32, 18, 0.72);
+  padding: 2px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.stage-spot:hover:not(:disabled) .stage-dot {
+  transform: scale(1.15);
+}
+
+.stage-spot.selected .stage-dot {
+  border-color: #ffd54f;
+  box-shadow: 0 0 0 5px rgba(255, 213, 79, 0.45);
+}
+
+.stage-spot:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stage-player {
+  position: absolute;
+  left: 50%;
+  top: 72%;
+  height: 20%;
+  transform: translate(-50%, -100%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.stage-player img {
+  height: 100%;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.3));
+}
+
+.stage-pet {
+  position: absolute;
+  left: 44%;
+  top: 73%;
+  height: 9%;
+  transform: translate(-50%, -100%);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.stage-pet img {
+  height: 100%;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.28));
+}
+
+@media (max-width: 780px) {
+  .map-dot { width: 28px; height: 28px; font-size: 13px; }
+  .map-name { font-size: 10.5px; padding: 1px 6px; }
+  .map-meta { display: none; }
+  .stage-dot { width: 28px; height: 28px; font-size: 13px; }
+  .stage-tag { font-size: 10px; padding: 1px 6px; }
+}
+.stage-spot-layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  margin: 0;
+  padding: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.stage-spot-layer .stage-spot {
+  pointer-events: auto;
+}
+/* ===== 布局精简：学生端 ===== */
+.app-grid.is-student .status-grid {
+  grid-template-columns: minmax(160px, 1fr) 120px minmax(190px, 260px);
+  gap: 10px;
+}
+
+.app-grid.is-student .status-tile {
+  padding: 12px 16px;
+}
+
+.app-grid.is-student .game-main {
+  gap: 12px;
+}
+
+.app-grid.is-student .game-sidebar {
+  gap: 12px;
+}
+
+/* ===== 布局精简：老师端分区 ===== */
+.pet-debug-section,
+.pull-student-section,
+.rank-reward-section,
+.guide-reset-section,
+.export-save-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(60, 100, 70, 0.22);
+}
+/* ===== 稳定性修复：视图切换不再依赖 opacity 动画 =====
+   后台标签页会冻结 CSS animation，若停在 from{opacity:0} 会导致整块内容不可见 */
+.view-container {
+  animation: none;
+}
+/* 登录卡片同理：后台标签冻结 opacity 动画会让整个登录框不可见 */
+.login-card {
+  animation: none;
+}
+/* 地图光点 / 探索点本身是 button，会被全局 button:hover 的位移覆盖，
+   丢失 translate(-50%,-50%) 的居中偏移，导致悬停时整块向右下跳。
+   这里把居中位移固定住，只保留圆点的放大反馈。 */
+.scene-grid.map-mode .map-pin,
+.scene-grid.map-mode .map-pin:hover,
+.scene-grid.map-mode .map-pin:active,
+.stage-spot-layer .stage-spot,
+.stage-spot-layer .stage-spot:hover,
+.stage-spot-layer .stage-spot:active {
+  transform: translate(-50%, -50%) !important;
+}
+/* ===== 洛克王国式全屏大世界（学生端） ===== */
+.app-grid.is-student {
+  display: block;
+  padding: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.app-grid.is-student .game-area {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: #10301f;
+  display: block;
+  overflow: hidden;
+}
+
+.app-grid.is-student .game-view {
+  height: 100%;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+/* 顶部信息条：角色名 / 行动点 */
+.app-grid.is-student .status-grid {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  width: auto;
+}
+
+.app-grid.is-student .status-tile {
+  padding: 5px 12px;
+  margin: 0;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+  min-width: 0;
+  width: auto;
+}
+
+.app-grid.is-student .status-tile .tile-label {
+  font-size: 10px;
+  margin: 0 0 1px;
+  color: #5b7a68;
+}
+
+.app-grid.is-student .hero-tile h2 {
+  font-size: 17px;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.app-grid.is-student .status-tile > strong {
+  font-size: 19px;
+  line-height: 1.15;
+}
+
+.app-grid.is-student .pet-status-tile {
+  display: none;
+}
+
+.app-grid.is-student .game-stage {
+  display: block;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.app-grid.is-student .game-sidebar {
+  display: none;
+}
+
+.app-grid.is-student .game-main {
+  display: block;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.app-grid.is-student .view-nav {
+  display: none;
+}
+
+.app-grid.is-student .view-container {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app-grid.is-student .world-panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.app-grid.is-student .world-panel .panel-heading {
+  display: none;
+}
+
+.app-grid.is-student .scene-inner-panel {
+  background: #f7fbf5;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 96px 12px 8px;
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  position: relative;
+  overflow-y: auto;
+}
+
+.app-grid.is-student .scene-inner-panel .panel-heading {
+  position: absolute;
+  top: 58px;
+  left: 12px;
+  right: 12px;
+  z-index: 30;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.app-grid.is-student .scene-inner-panel .panel-heading h2 {
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+  font-size: 20px;
+  margin: 0;
+}
+
+.app-grid.is-student .scene-grid.map-mode {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  gap: 0;
+}
+
+/* 地图保持 16:9，坐标点不会错位 */
+.app-grid.is-student .continent {
+  width: min(100%, calc((100vh - 24px) * 16 / 9));
+  max-height: calc(100vh - 24px);
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.app-grid.is-student .scene-stage {
+  width: min(96vw, calc((100vh - 240px) * 16 / 9));
+  min-width: 300px;
+  flex: 0 0 auto;
+  border-radius: 0;
+  margin: 0 auto;
+}
+
+/* 场景舞台的父级氛围层原本是 0 宽，这里补上占位 */
+.app-grid.is-student .scene-inner-panel .sceneAtmosphere {
+  width: 100%;
+  display: block;
+}
+
+.app-grid.is-student .scene-result,
+.app-grid.is-student .scene-inventory {
+  width: min(100%, 920px);
+  margin: 0 auto;
+}
+
+/* 地图上的训练师 */
+.map-player {
+  position: absolute;
+  width: 46px;
+  height: 78px;
+  transform: translate(-50%, -100%);
+  z-index: 7;
+  pointer-events: none;
+  transition: left 0.42s linear, top 0.42s linear;
+  filter: drop-shadow(0 6px 9px rgba(0, 0, 0, 0.38));
+}
+
+.map-player img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* 右下角功能坞 */
+.dock-bar {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+}
+
+.dock-btn {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.24);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.dock-icon {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.dock-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #24402e;
+  line-height: 1.15;
+}
+
+.dock-btn:hover {
+  background: #ffffff;
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+  transform: none !important;
+}
+
+/* 弹窗：宠物 / 商店 / 计时 */
+.zone-modal {
+  z-index: 1200;
+}
+
+.zone-modal-box {
+  width: min(760px, 92vw);
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 10px;
+}
+
+.zone-modal-box.wide {
+  width: min(940px, 94vw);
+}
+
+.zone-modal-box.narrow {
+  width: min(440px, 92vw);
+}
+
+.zone-modal-body {
+  overflow-y: auto;
+  padding: 6px 14px 4px;
+}
+
+.zone-modal-body .panel {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0 0 10px;
+  margin: 0 0 6px;
+  border-bottom: 1px dashed rgba(60, 100, 70, 0.18);
+}
+
+.zone-modal-body .panel:last-child {
+  border-bottom: none;
+}
+
+.zone-modal-body .timer-panel {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* 弹窗进场也不要依赖 opacity 动画（后台标签会冻结） */
+.modal-overlay,
+.zone-modal {
+  animation: none;
+}
+/* 弹窗外框：覆盖通用 .modal 的 400px 限宽与弹出动画 */
+.zone-modal-box {
+  animation: none;
+  max-width: none;
+  padding: 0 0 10px;
+}
+
+.zone-modal-box .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px 6px;
+}
+
+.zone-modal-box .modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #24402e;
+}
+
+.modal-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #eef2ee;
+  color: #3a5a45;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 0;
+}
+
+.modal-close:hover {
+  background: #e2e9e2;
+  transform: none !important;
+}
+/* 所有弹窗内框都不要 opacity 入场动画（后台标签会冻结在 opacity:0） */
+.modal {
+  animation: none;
+}
+
+.zone-modal-box,
+.rank-modal,
+.capture-modal,
+.evolve-modal {
+  animation: none;
+}
+/* 所有弹窗统一头部布局：标题左、关闭右 */
+.modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 10px;
+}
+
+.modal .modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal .modal-close {
+  margin: 0;
+}
+
+.rank-modal {
+  max-width: 520px;
+}
+/* 排行榜标签激活态（--accent 变量未定义，这里显式给色） */
+.rank-tab.active {
+  background: linear-gradient(135deg, #ff9800, #ffb74d);
+  color: #ffffff;
+  border-color: #ff9800;
+}
+
+/* 计时器在白色弹窗里的可读性 */
+.timer-display {
+  color: #24402e;
+  font-weight: 800;
+}
+
+.timer-title {
+  color: #4c6b56;
+}
+/* ===== P0-1 底部工具栏（对标洛克王国一条横栏） ===== */
+.dock-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(26, 58, 40, 0.88), rgba(14, 36, 24, 0.96));
+  border-top: 2px solid rgba(255, 226, 160, 0.3);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 -6px 22px rgba(0, 0, 0, 0.35);
+  z-index: 40;
+}
+
+.dock-btn {
+  width: auto;
+  height: 36px;
+  min-width: 92px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f0f8f1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  box-shadow: none;
+  cursor: pointer;
+  padding-block: 0;
+  transition: background 0.15s ease;
+}
+
+.dock-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.dock-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0f8f1;
+  line-height: 1;
+}
+
+.dock-btn:hover {
+  background: rgba(255, 255, 255, 0.26);
+  box-shadow: none;
+  transform: none !important;
+}
+
+/* 底栏占了 48px，地图相应让出高度 */
+.app-grid.is-student .continent {
+  width: min(100%, calc((100vh - 76px) * 16 / 9));
+  max-height: calc(100vh - 76px);
+}
+/* 去掉老规则留下的 1180px 限宽，让地图真正铺满 */
+.app-grid.is-student .continent {
+  max-width: none;
+}
+
+/* 底栏 4 个入口沿整条均分，像洛克王国那样铺开 */
+.dock-bar {
+  justify-content: space-evenly;
+  gap: 0;
+}
+
+.dock-btn {
+  flex: 1 1 0;
+  max-width: 200px;
+  min-width: 96px;
+}
+/* 地图在可用区域内垂直居中，别贴着顶、下方留一大片 */
+.app-grid.is-student .scene-grid.map-mode {
+  padding: 46px 0 54px;
+  box-sizing: border-box;
+}
+
+/* 底栏按钮收紧并居中，别拉成四条长条 */
+.dock-bar {
+  justify-content: center;
+  gap: 10px;
+}
+
+.dock-btn {
+  flex: 0 1 160px;
+  max-width: 160px;
+  min-width: 110px;
+}
+/* ===== P0-2 出战宠物跟随 ===== */
+.map-pet {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  transform: translate(-50%, -100%);
+  z-index: 6;
+  pointer-events: none;
+  transition: left 0.42s linear, top 0.42s linear;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.36));
+}
+
+.map-pet img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+/* ===== P0-3 宠物弹窗三栏布局 ===== */
+.zone-modal-box.pet {
+  width: min(96vw, 1080px);
+  max-width: none;
+}
+
+.pet-three-col {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 290px;
+  gap: 14px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pet-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* 三栏内的面板去掉自身外边距，靠 grid 间距控制 */
+.pet-col > .panel {
+  margin: 0;
+}
+
+/* 左栏宠物列表撑满，内部可滚动 */
+.pet-col-list .pet-team-list {
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+}
+
+/* 中栏大图与资料 */
+.pet-col-detail .hatch-content {
+  padding: 4px 0;
+}
+
+/* 右栏能力条 */
+.pet-col-ability .stat-bars,
+.pet-col-ability .battle-stats {
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .pet-three-col {
+    grid-template-columns: 170px minmax(0, 1fr) 230px;
+    gap: 10px;
+  }
+}
+/* 三栏各自滚动，弹窗整体不溢出 */
+.zone-modal-box.pet .zone-modal-body {
+  overflow: visible;
+  max-height: none;
+}
+
+.pet-three-col {
+  max-height: calc(100vh - 170px);
+}
+
+.pet-col {
+  overflow-y: auto;
+  max-height: calc(100vh - 170px);
+}
+
+.pet-col-list > .panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 200px);
+}
+
+.pet-col-list .pet-team-list {
+  flex: 1 1 auto;
+  max-height: none;
+  overflow-y: auto;
+}
+
+/* 中栏大图稍微收一点，给资料留空间 */
+.pet-col-detail .pet-showcase,
+.pet-col-detail .hatch-visual {
+  max-width: 300px;
+}
+/* 弹窗放宽到 92vh，左栏列表自然长开 */
+.zone-modal-box.pet {
+  max-height: 92vh;
+}
+
+.pet-col-list,
+.pet-col-list > .panel,
+.pet-col-list .pet-team-list {
+  max-height: none;
+  overflow: visible;
+}
+
+.pet-col-list > .panel {
+  display: block;
+}
+
+.pet-col-detail {
+  overflow-y: auto;
+}
+/* 左栏宠物列表改成块级堆叠，宽度铺满、高度自然 */
+.pet-col-list .pet-team-list {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 8px;
+  height: auto;
+  overflow: visible;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pet-col-list .pet-team-item {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.pet-col-list .pet-team-item img {
+  max-width: 100%;
+}
+/* 左栏卡片紧凑化：头像 + 名字 + 等级 一行，按钮缩到下方 */
+.pet-col-list .pet-team-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.pet-col-list .pet-team-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pet-col-list .pet-team-img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  object-fit: contain;
+}
+
+.pet-col-list .pet-team-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pet-col-list .pet-team-name {
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pet-col-list .pet-team-level {
+  font-size: 11px;
+  line-height: 1.3;
+  color: #6b7d70;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pet-col-list .pet-team-bond {
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pet-col-list .pet-team-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pet-col-list .pet-team-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.pet-col-list .pet-team-row button,
+.pet-col-list .pet-team-active-tag {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+/* 卡片在左栏里必须撑满整宽 */
+.pet-col-list .pet-team-list {
+  align-items: stretch;
+  width: 100%;
+}
+
+.pet-col-list .pet-team-item {
+  align-self: stretch;
+  width: auto;
+  flex: 0 0 auto;
+  min-width: 0;
+  display: flex;
+}
+
+.pet-col-list .pet-team-item > * {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pet-col-list .pet-team-item {
+  flex-direction: column;
+}
+/* 用 id 选择器压过 .app-grid.is-student .pet-team-* 的老规则 */
+#petColList .pet-team-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 8px;
+  height: auto;
+  overflow: visible;
+  padding: 0;
+}
+
+#petColList .pet-team-item {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+#petColList .pet-team-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+#petColList .pet-team-img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  object-fit: contain;
+}
+
+#petColList .pet-team-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#petColList .pet-team-name {
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#petColList .pet-team-level {
+  font-size: 11px;
+  line-height: 1.3;
+  color: #6b7d70;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#petColList .pet-team-bond {
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#petColList .pet-team-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#petColList .pet-team-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+#petColList .pet-team-row button,
+#petColList .pet-team-active-tag {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+/* ========== 场景页全屏重做 ========== */
+.app-grid.is-student .scene-inner-panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 52px);
+  padding: 0;
+  margin: 0;
+  gap: 0;
+  border-radius: 0;
+  background: #0d1f15;
+}
+
+.app-grid.is-student .scene-topbar {
+  flex: 0 0 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(26,58,40,0.96), rgba(14,36,24,0.98));
+  border-bottom: 2px solid rgba(255,226,160,0.28);
+}
+
+.app-grid.is-student .scene-topbar .back-button {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 5px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #f0f8f1;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 8px;
+  transform: none !important;
+}
+
+.app-grid.is-student .scene-topbar .back-button:hover {
+  background: rgba(255,255,255,0.26);
+}
+
+.app-grid.is-student .scene-topbar #sceneInnerTitle {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffe9b0;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+
+.app-grid.is-student .scene-topbar .scene-inventory {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0;
+}
+
+.app-grid.is-student .scene-atmosphere {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.app-grid.is-student .scene-atmosphere .scene-stage {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  min-width: 0;
+  margin: 0;
+  border-radius: 0;
+  background: #16261a;
+}
+
+.app-grid.is-student .scene-stage .scene-stage-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 场景内角色走动 */
+.stage-player {
+  transition: left 0.12s linear, top 0.12s linear;
+}
+
+/* ========== 底栏角色信息面板 ========== */
+.app-grid.is-student .dock-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  box-sizing: border-box;
+}
+
+.app-grid.is-student .dock-profile {
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-right: 14px;
+  border-right: 1px solid rgba(255,255,255,0.18);
+}
+
+.dock-profile-avatar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,226,160,0.45);
+  object-fit: cover;
+}
+
+.dock-profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.dock-profile-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffe9b0;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.dock-profile-gender {
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.16);
+  color: #dfeee4;
+  line-height: 1.5;
+}
+
+.dock-profile-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #cfe3d6;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.dock-profile-meta b {
+  color: #ffe9b0;
+  font-weight: 700;
+}
+
+.dock-actions {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+/* 角色信息已挪到底栏，隐藏原左上角 HUD */
+.app-grid.is-student .status-grid {
+  display: none !important;
+}
+/* 氛围层宽度必须显式给足，否则舞台会塌成 0 宽 */
+.app-grid.is-student .scene-atmosphere {
+  display: block;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.app-grid.is-student .scene-atmosphere .scene-stage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  max-width: none;
+  aspect-ratio: auto;
+  margin: 0;
+  border-radius: 0;
+}
+/* 全局提示条改成浮动，不再占文档流（否则会把场景页顶下去） */
+.app-grid.is-student .global-result,
+.app-grid.is-student #resultMessage {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 46;
+  margin: 0;
+  padding: 5px 16px;
+  max-width: 70vw;
+  border-radius: 10px;
+}
+
+/* 场景页顶条里的道具：压成横排小格 */
+.app-grid.is-student .scene-topbar .inventory-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+/* 顶条道具：图标 + 数量的小方块，一行排开 */
+.app-grid.is-student .scene-topbar .inventory-heading {
+  flex: 0 0 auto;
+  margin: 0;
+  max-width: 165px;
+  font-size: 11px;
+  color: #dfeee4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-grid.is-student .scene-topbar .inventory-item-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  grid-template-columns: none;
+}
+
+.app-grid.is-student .scene-topbar .inventory-item {
+  width: 40px;
+  height: 38px;
+  flex: 0 0 40px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px;
+  border-radius: 7px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.app-grid.is-student .scene-topbar .inventory-item-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
+
+.app-grid.is-student .scene-topbar .inventory-item-name {
+  display: none;
+}
+
+.app-grid.is-student .scene-topbar .inventory-item-count,
+.app-grid.is-student .scene-topbar .inventory-count {
+  font-size: 10px;
+  line-height: 1;
+  color: #3d5a47;
+}
+
+.app-grid.is-student .scene-topbar .scene-inventory {
+  align-items: center;
+}
+/* 场景页里的结果条也浮起来，避免挤压舞台高度 */
+.app-grid.is-student #sceneResult {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 47;
+  margin: 0;
+  padding: 5px 16px;
+  max-width: 70vw;
+  border-radius: 10px;
+}
+
+/* 已被搬进舞台/顶条的空壳不再占位置 */
+.app-grid.is-student .scene-inner-panel > .scene-spot-list,
+.app-grid.is-student .scene-inner-panel > .scene-inventory {
+  display: none;
+}
+
+.app-grid.is-student .scene-inner-panel {
+  gap: 0;
+}
+/* 场景内走动不做过渡，按下即到位（避免后台标签冻结动画导致位置不刷新） */
+.stage-player,
+.stage-pet {
+  transition: none !important;
+}
+/* ===== 宠物栏重做：洛克王国式紧凑列表 ===== */
+#petColList .pet-team-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  min-height: 74px;
+  height: auto;
+  box-sizing: border-box;
+}
+
+#petColList .pet-team-header {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+#petColList .pet-team-img {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  object-fit: contain;
+}
+
+#petColList .pet-team-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+#petColList .pet-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#petColList .pet-team-level {
+  font-size: 11px;
+  line-height: 1.25;
+  color: #6b7d70;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#petColList .pet-team-bond {
+  font-size: 11px;
+  line-height: 1.25;
+  color: #b07b2a;
+  white-space: nowrap;
+}
+
+#petColList .pet-team-actions {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, 24px);
+  grid-auto-rows: 24px;
+  gap: 3px;
+}
+
+#petColList .pet-team-row {
+  display: contents;
+}
+
+#petColList .pet-team-row button,
+#petColList .pet-team-active-tag {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  transform: none !important;
+}
+/* 修正：按钮区不能吃满整行宽度 */
+#petColList .pet-team-actions {
+  width: auto;
+  max-width: none;
+  flex: 0 0 auto;
+}
+
+#petColList .pet-team-header {
+  width: auto;
+  flex: 1 1 auto;
+}
+
+#petColList .pet-team-img {
+  width: 44px;
+  min-width: 44px;
+  flex: 0 0 44px;
+}
+
+#petColList .pet-team-meta {
+  width: auto;
+  min-width: 0;
+}
+/* 顶条道具图标放大并让内嵌图形铺满 */
+.app-grid.is-student .scene-topbar .inventory-item {
+  width: 46px;
+  flex: 0 0 46px;
+  height: 40px;
+  gap: 2px;
+}
+
+.app-grid.is-student .scene-topbar .inventory-item-icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.app-grid.is-student .scene-topbar .inventory-item-icon svg,
+.app-grid.is-student .scene-topbar .inventory-item-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* ===== 宠物操作按钮：挂在属性栏底部 ===== */
+#petActionBar {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2ece5;
+}
+
+.pet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pet-actions-row {
+  display: flex;
+  gap: 6px;
+}
+
+.pet-act-btn,
+.pet-act-tag {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 5px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  transform: none !important;
+}
+
+.pet-act-tag {
+  display: grid;
+  place-items: center;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+/* 概览里的进化提示：一行就好 */
+.pet-evolve-line {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #55705f;
+  background: #f3f8f4;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+/* 进化阶段改成一行横排 */
+#petColDetail .evolution-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+#petColDetail .evolution-step {
+  flex: 0 0 auto;
+  width: 88px;
+  padding: 5px;
+  gap: 2px;
+}
+
+#petColDetail .evolution-step img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+#petColDetail .evolution-step span {
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 82px;
+}
+
+/* 概览区整体压紧 */
+#petColDetail .hatch-content {
+  gap: 10px;
+}
+
+#petColDetail .hatch-copy {
+  gap: 8px;
+}
+/* 进化阶段三等分，不再横向溢出 */
+#petColDetail .evolution-track {
+  gap: 6px;
+  overflow: visible;
+}
+
+#petColDetail .evolution-step {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+}
+/* ===== 宠物概览重新布局 ===== */
+#petColDetail .hatch-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 200px;
+}
+
+#petColDetail .pet-card {
+  flex: 0 0 auto;
+  width: 184px;
+  max-width: 46%;
+}
+
+#petColDetail .hatch-copy {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+#petColDetail .hatch-copy h3 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.35;
+  color: #274236;
+}
+
+#petColDetail .pet-evolve-line {
+  font-size: 12.5px;
+  padding: 7px 10px;
+}
+
+/* 属性栏亲密度 */
+.bond-row {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fbf6f9;
+}
+
+.bond-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: #7b5b6b;
+  margin-bottom: 5px;
+}
+
+.bond-meta strong {
+  color: #b0477a;
+  font-size: 12.5px;
+}
+
+.bond-track {
+  height: 6px;
+}
+
+.bond-fill {
+  width: 0;
+  background: linear-gradient(90deg, #f4a7c3, #e2639c);
+}
+/* ===== 鼠标点击走动 ===== */
+.scene-stage {
+  cursor: pointer;
+}
+
+.walk-mark {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 2px rgba(90, 160, 255, 0.65);
+  pointer-events: none;
+  z-index: 5;
+  animation: walkPulse 0.6s ease-out forwards;
+}
+
+@keyframes walkPulse {
+  from { transform: scale(0.45); opacity: 1; }
+  to { transform: scale(1.7); opacity: 0; }
+}
+/* ============================================================
+   界面视觉改造 V0–V5  |  2026-11-17
+   本块追加在 styles.css 末尾，靠"后写覆盖先写"生效。
+   凡是涉及学生端三栏 / 场景页的规则，统一用 #id 前缀，
+   以免被前面的 .app-grid.is-student .xxx (0,3,0) 压掉。
+   ============================================================ */
+
+/* ---------------- V0 设计令牌 ---------------- */
+:root {
+  --bg-deep: #e8dfcc;
+  --bg: #f7f1e3;
+  --surface: #fffdf6;
+  --surface-hi: #ffffff;
+  --ink: #2f2a22;
+  --muted: #7a6f5d;
+  --ink-soft: #6b6152;
+  --line: #cbbda3;
+  --green: #58a35f;
+  --green-deep: #2f6b3c;
+  --gold: #f2b23e;
+  --gold-deep: #b9751a;
+  --blue: #4b9ec9;
+  --red: #d9614a;
+  --ice: #7fc0c9;
+  --locked: #9a9690;
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-pill: 999px;
+  --stroke: 2px solid var(--line);
+  --stroke-strong: 3px solid #a8916f;
+  --shadow-hard: 0 4px 0 #cdbb9c;
+  --shadow-soft: 0 10px 24px rgba(96, 76, 44, 0.14);
+  --shadow: 0 10px 24px rgba(96, 76, 44, 0.14);
+  --inner-hi: inset 0 2px 0 rgba(255, 255, 255, 0.85);
+  --font-num: "Bahnschrift", "DIN Alternate", "Microsoft YaHei", sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(1100px 520px at 50% -8%, rgba(255, 246, 222, 0.95), rgba(255, 246, 222, 0)),
+    var(--bg);
+  color: var(--ink);
+}
+
+/* ---------------- V1 面板与卡片 ---------------- */
+.panel {
+  padding: 18px 18px 20px;
+  border: var(--stroke);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-hard), var(--inner-hi);
+}
+
+.topbar {
+  border: var(--stroke);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-hard), var(--inner-hi);
+}
+
+/* 左栏宠物卡片：厚边 + 硬影（#petColList 权重 1,1,0 高于 0,3,0） */
+#petColList .pet-team-item {
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-hi);
+  box-shadow: 0 3px 0 #d8c8ab;
+  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+#petColList .pet-team-item.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(242, 178, 62, 0.35), 0 3px 0 #d8c8ab;
+  transform: translateY(-1px);
+}
+
+/* 中栏：独立卡片 */
+.pet-col-detail {
+  border: var(--stroke);
+  border-radius: var(--r-md);
+  background: var(--surface-hi);
+  box-shadow: var(--shadow-hard), var(--inner-hi);
+}
+
+/* ---------------- V2 按钮体系 ---------------- */
+.primary-button,
+.secondary-button,
+.danger-button,
+.ghost-button {
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+  transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, background 0.16s ease;
+}
+
+.primary-button {
+  border: 2px solid var(--green-deep);
+  background: var(--green);
+  color: #ffffff;
+  box-shadow: 0 3px 0 var(--green-deep), var(--inner-hi);
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #4d9453;
+}
+
+.primary-button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--green-deep), var(--inner-hi);
+}
+
+.secondary-button {
+  border: 2px solid #a9c8da;
+  background: #eff8fd;
+  color: #214f6f;
+  box-shadow: 0 3px 0 #a9c8da, var(--inner-hi);
+}
+
+.secondary-button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 #a9c8da, var(--inner-hi);
+}
+
+/* 底栏四个入口：方块化 + 硬影（保留原有 flex 宽度设定） */
+.dock-btn {
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: 0 3px 0 #d8c8ab;
+  transform: none !important;
+}
+
+.dock-btn:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 0 0 #d8c8ab;
+}
+
+/* 宠物操作按钮（右侧属性栏下方） */
+.pet-act-btn {
+  border-radius: var(--r-pill) !important;
+  box-shadow: 0 2px 0 #d8c8ab;
+}
+
+/* ---------------- V3 进度条与数值 ---------------- */
+.progress-track {
+  height: 16px;
+  padding: 2px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-pill);
+  background: #efe6d2;
+  box-sizing: border-box;
+}
+
+.progress-fill {
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+
+.bond-track {
+  height: 12px;
+  border: 2px solid #d9b8c9;
+  border-radius: var(--r-pill);
+  background: #f7ecf2;
+  box-sizing: border-box;
+}
+
+/* 数值用等宽圆体，和标签拉开对比 */
+.stat-meta strong,
+.bond-meta strong {
+  font-family: var(--font-num);
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+/* ---------------- V4 弹窗体系 ---------------- */
+.modal-overlay {
+  background: rgba(46, 36, 22, 0.58);
+}
+
+.zone-modal-box {
+  border: var(--stroke-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-hi);
+  box-shadow: 0 10px 0 rgba(168, 145, 111, 0.3), 0 26px 60px rgba(60, 45, 25, 0.3);
+}
+
+.zone-modal-box .modal-header {
+  margin: 0;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, #ffe9b8, #ffd98a);
+  border-bottom: var(--stroke);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+/* ---------------- V5 三栏分区 ---------------- */
+.pet-col-detail,
+#petColAbility {
+  position: relative;
+}
+
+#petColDetail::before,
+#petColAbility::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 10%;
+  width: 0;
+  height: 80%;
+  border-left: 1px dashed #c9bca4;
+  pointer-events: none;
+}
+
+/* ============================================================
+   界面视觉改造 V6–V8  |  2026-11-17
+   场景页 / 大地图 / 登录页 / 动效
+   注意：.map-pin 与 .stage-spot 外层负责 translate 定位，
+   这里一律只改内部 .map-dot / .stage-dot，绝不动外层 transform，
+   否则地图点位会整体偏移。
+   ============================================================ */
+
+/* ---------------- V6 场景页 ---------------- */
+#sceneView .scene-topbar {
+  padding: 10px 14px;
+  border: 2px solid #d9c49c;
+  border-radius: var(--r-sm);
+  background: linear-gradient(180deg, #fff8e6, #fdeecb);
+  box-shadow: 0 3px 0 #d8c8ab;
+}
+
+#sceneView .scene-topbar .back-button {
+  border: 2px solid #8a6f4a;
+  border-radius: var(--r-pill);
+  background: #fff3d2;
+  color: #5d4526;
+  box-shadow: 0 3px 0 #8a6f4a;
+  transform: none !important;
+}
+
+#sceneView .scene-topbar .back-button:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 0 0 #8a6f4a;
+}
+
+#sceneView #sceneInnerTitle {
+  color: #5d4526;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding-bottom: 2px;
+  border-bottom: 2px solid #e2c88f;
+}
+
+/* 探索点：小木牌 */
+#sceneView .stage-dot {
+  border: 2px solid #8a6f4a;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff6da, #ffe9b0);
+  box-shadow: 0 3px 0 #8a6f4a, 0 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+#sceneView .stage-tag {
+  color: #5d4526;
+  background: rgba(255, 246, 218, 0.94);
+  border: 1px solid #d9c49c;
+  border-radius: 8px;
+}
+
+/* 底部提示条：羊皮纸 */
+#sceneView #sceneResult {
+  color: var(--ink);
+  background: #fff7e0;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  box-shadow: 0 3px 0 #d8c8ab;
+}
+
+/* 顶条道具图标：统一放大到 22px（原规则用 0,3,0 压制，这里用 id 前缀反压） */
+#sceneView .scene-topbar .inventory-item-icon {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+#sceneView .scene-topbar .inventory-item-icon svg,
+#sceneView .scene-topbar .inventory-item-icon img {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+/* ---------------- V7 大地图 + 登录页 ---------------- */
+/* 地标：米黄木牌 */
+#worldView .map-dot {
+  border: 2px solid #8a6f4a;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff6da, #ffe9b0);
+  box-shadow: 0 3px 0 #8a6f4a, 0 0 0 3px rgba(255, 255, 255, 0.55);
+}
+
+#worldView .map-name {
+  color: #5d4526;
+  background: rgba(255, 248, 230, 0.92);
+  border: 1px solid #d9c49c;
+  border-radius: 8px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* 训练师脚下投影，人不再"浮"在地图上方 */
+.map-player::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 54px;
+  height: 16px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 登录卡：游戏面板而非网页卡片 */
+.login-card {
+  border: var(--stroke-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-hi);
+  box-shadow: 0 12px 0 rgba(168, 145, 111, 0.32), 0 30px 70px rgba(50, 38, 20, 0.32);
+}
+
+/* ---------------- V8 动效 ---------------- */
+/* 弹窗不做缩放入场：历史上 opacity 动画会在后台标签停在 from 导致白屏，
+   这里显式加固为 none，只保留按钮与呼吸动画。 */
+.zone-modal-box,
+.modal-overlay,
+.modal,
+.zone-modal,
+.rank-modal,
+.view-container,
+.login-card {
+  animation: none !important;
+}
+
+@keyframes pet-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* 中栏宠物大图轻微呼吸（只用 transform，不涉及 opacity，后台冻结也不会白屏） */
+.pet-col-detail .hatch-visual img {
+  animation: pet-breathe 3s ease-in-out infinite;
+}
+
+.button-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------------- V7+ 登录页背景与按钮修正 ---------------- */
+/* 原 .login-view 是紫色渐变（#667eea → #764ba2），与整套暖色令牌冲突，整体换掉 */
+.login-view {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(168, 145, 111, 0.06) 0 2px,
+      rgba(168, 145, 111, 0) 2px 26px
+    ),
+    radial-gradient(1100px 560px at 50% 0%, rgba(255, 243, 210, 0.95), rgba(255, 243, 210, 0)),
+    linear-gradient(160deg, #f7f1e3 0%, #e9ddc3 100%);
+}
+
+.login-button {
+  border: 2px solid var(--green-deep);
+  border-radius: var(--r-pill);
+  background: var(--green);
+  color: #ffffff;
+  box-shadow: 0 3px 0 var(--green-deep), var(--inner-hi);
+  transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, background 0.16s ease;
+}
+
+.login-button:hover:not(:disabled) {
+  background: #4d9453;
+}
+
+.login-button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--green-deep), var(--inner-hi);
+}
+
+.login-form input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(242, 178, 62, 0.24);
+}
+
+.login-title {
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #3b3125;
+}
+
+.login-subtitle {
+  color: var(--muted);
+}
+
+.login-tab.is-active {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 2px 0 #d8c8ab;
+}
+
+/* ---------------- V9 补齐：底栏木色化 / 引导弹窗去紫 ---------------- */
+/* 底栏原来是近黑的深绿渐变，改成木质深条，保留白字可读性 */
+.dock-bar {
+  border-top: 3px solid #a8916f;
+  background: linear-gradient(180deg, #6f5637 0%, #4c3b24 100%);
+  box-shadow: 0 -6px 18px rgba(60, 45, 25, 0.22);
+}
+
+.dock-btn {
+  color: #fff8e6;
+}
+
+/* 新手引导：与主弹窗同一套"厚边 + 大圆角 + 硬影" */
+.guide-modal {
+  border: var(--stroke-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-hi);
+  box-shadow: 0 10px 0 rgba(168, 145, 111, 0.3), 0 26px 60px rgba(60, 45, 25, 0.3);
+}
+
+.guide-header {
+  border-bottom: 2px solid var(--line);
+}
+
+.guide-highlight {
+  background: #fff7e0;
+  border-left: 4px solid var(--gold);
+  border-radius: var(--r-sm);
+}
+
+.guide-btn {
+  border: 2px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 3px 0 #d8c8ab;
+  transform: none !important;
+}
+
+.guide-btn:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 0 0 #d8c8ab;
+}
+
+.guide-btn.primary {
+  border-color: var(--green-deep);
+  background: var(--green);
+  color: #ffffff;
+  box-shadow: 0 3px 0 var(--green-deep);
+}
+
+.guide-btn.primary:active {
+  box-shadow: 0 0 0 var(--green-deep);
+}
+
+.guide-badge {
+  background: var(--gold);
+  color: #4a3410;
+}
+
+/* ---------------- V10 计时面板去紫 ---------------- */
+.timer-panel {
+  border: var(--stroke);
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, #fff8e6 0%, #fbeed0 100%);
+  box-shadow: var(--shadow-hard), var(--inner-hi);
+  color: var(--ink);
+}
+
+.timer-panel .timer-label,
+.timer-panel .timer-heading {
+  color: #5d4526;
+}
+
+.timer-panel .timer-time,
+.timer-panel .timer-value {
+  color: #2f2a22;
+  font-family: var(--font-num);
+  font-weight: 800;
+}
+
+/* ---------------- V11 全屏画布与底栏对比度 ---------------- */
+/* 地图外的留白不再用深绿，改成云海浅色，和地图本身衔接 */
+.app-grid.is-student .game-area {
+  background: linear-gradient(180deg, #d7ebf9 0%, #eef7fd 55%, #f8fcfe 100%);
+}
+
+/* 地图在可视区垂直居中，上下留白均匀；底部留出底栏高度 */
+.app-grid.is-student .scene-grid.map-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0 58px;
+  box-sizing: border-box;
+}
+
+/* 底栏按钮：米白底 + 深色字（原白字配白底几乎看不见） */
+.dock-btn {
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.dock-btn span,
+.dock-btn strong,
+.dock-btn small,
+.dock-btn-label {
+  color: var(--ink);
+}
+
+/* ---------------- V12 覆盖 #sceneGrid 的 id 级 display:block ---------------- */
+/* #sceneGrid.map-mode 是 (1,1,0)，权重压过 .app-grid.is-student .scene-grid.map-mode，
+   必须带 id 才能把地图容器切成 flex 并垂直居中 */
+.app-grid.is-student #sceneGrid.map-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0 58px;
+  box-sizing: border-box;
+}
+
+#sceneGrid.map-mode {
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------- V13 三栏细节修正 ---------------- */
+/* 旧规则给选中卡片挂了紫色外发光（#667eea 系），用 !important 换成金色 */
+#petColList .pet-team-item.active {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px rgba(242, 178, 62, 0.4), 0 3px 0 #d8c8ab !important;
+  background: #fffdf3 !important;
+}
+
+/* 中栏"下一阶段"提示框：由浅绿改米黄，与整体暖色统一 */
+.pet-col-detail .pet-evolve-line,
+.pet-col-detail .evolve-hint {
+  border: 1px solid #e2c88f;
+  border-radius: var(--r-sm);
+  background: #fff7e0;
+  color: #6b5230;
+}
+
+/* 宠物大图相框 */
+.pet-col-detail .hatch-visual {
+  border: 2px solid #e2c88f;
+  border-radius: var(--r-md);
+  background: radial-gradient(circle at 50% 45%, #fffdf3 0%, #fdf2d8 70%);
+  box-shadow: 0 3px 0 #e2c88f;
+}
+
+/* ---------------- V14 场景顶条重排（两行） ---------------- */
+/* 原顶条把「返回 + 场景名 + 道具栏」挤在一行，道具栏被压成竖条、文字重叠。
+   改为：第一行「返回大世界 + 场景名」，第二行整行留给道具。 */
+#sceneView .scene-topbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px 12px !important;
+  padding: 8px 14px !important;
+  border-radius: var(--r-md) !important;
+  border: var(--stroke) !important;
+  background: linear-gradient(180deg, #fff8e6, #fdf1d8) !important;
+  box-shadow: var(--shadow-hard) !important;
+  row-gap: 8px !important;
+}
+
+#sceneView .scene-topbar .back-button {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+#sceneView #sceneInnerTitle {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+/* 道具栏独占一行，内部横向排列，禁止挤压 */
+#sceneView #sceneInventory {
+  flex: 1 0 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  overflow: hidden !important;
+}
+
+#sceneView #sceneInventory > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+#sceneView #sceneInventory .inventory-item-grid {
+  display: flex !important;
+  gap: 6px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+  overflow: hidden !important;
+}
+
+#sceneView #sceneInventory .inventory-item {
+  flex: 0 1 76px !important;
+  min-width: 52px !important;
+  max-width: 76px !important;
+  text-align: center !important;
+  padding: 4px 5px !important;
+  border-radius: var(--r-sm) !important;
+  border: 1.5px solid #dcc9a4 !important;
+  background: #fffdf5 !important;
+  box-sizing: border-box !important;
+}
+
+#sceneView #sceneInventory .inventory-item.locked {
+  opacity: 0.55 !important;
+}
+
+#sceneView #sceneInventory .inventory-item-name {
+  display: block !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #6b5230 !important;
+}
+
+#sceneView #sceneInventory .inventory-item-icon {
+  width: 22px !important;
+  height: 22px !important;
+  margin: 0 auto 2px !important;
+  line-height: 22px !important;
+  font-size: 16px !important;
+}
+
+/* 道具标题不换行、不被压 */
+#sceneView #sceneInventory h4,
+#sceneView #sceneInventory h5,
+#sceneView #sceneInventory .inventory-heading {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  color: #8a7452 !important;
+}
+
+/* ---------------- V15 场景容器铺满 + 提示条归位 ---------------- */
+/* 顶条只有 573px，两侧露出深绿底：panel 是内容宽，露出的背景是 game-area 旧深绿 */
+#sceneView {
+  background: transparent !important;
+}
+
+#sceneView .scene-inner-panel {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+#sceneView .scene-topbar {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 8px 0 0 !important;
+}
+
+/* 让场景舞台整块铺满，去掉左右深绿边 */
+#sceneView .scene-atmosphere {
+  width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* 提示条（"角色已创建…"之类）原来压在道具栏上，挪到画面底部居中 */
+#sceneView #sceneResult {
+  position: absolute !important;
+  top: auto !important;
+  bottom: 86px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(620px, 84%) !important;
+  margin: 0 !important;
+  z-index: 8 !important;
+  border: 2px solid #dcc9a4 !important;
+  border-radius: var(--r-md) !important;
+  background: rgba(253, 246, 227, 0.96) !important;
+  box-shadow: 0 4px 0 #cdbb9c !important;
+  color: #4a3b28 !important;
+  font-size: 13px !important;
+}
+
+/* ---------------- V16 全局提示条避让 + 道具名不换行 ---------------- */
+/* .global-result 固定定位于 top:60，在大世界顶部居中没毛病，
+   但进了场景视图会正好压住顶条第二行的道具栏 —— 用 :has() 只在场景视图里挪到底部。 */
+.game-main:has(#sceneView:not([hidden])) .global-result,
+.game-main:has(#sceneView:not([hidden])) #resultMessage {
+  top: auto !important;
+  bottom: 132px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 30 !important;
+  max-width: min(620px, 84%) !important;
+}
+
+/* 道具名不再竖排 */
+#sceneView #sceneInventory .inventory-item-name {
+  width: 100% !important;
+  max-width: 100% !important;
+  writing-mode: horizontal-tb !important;
+  letter-spacing: 0 !important;
+}
+
+#sceneView #sceneInventory .inventory-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+}
+
+/* ---------------- V17 角色弹窗 + 底栏五入口 ---------------- */
+/* 左下角角色名牌下线：名字/行动点改由角色弹窗承载，不再压在画面左下 */
+#dockProfile {
+  display: none !important;
+}
+
+/* 底栏 5 个入口平分（角色 / 宠物 / 商店 / 排行榜 / 计时） */
+.dock-bar .dock-actions {
+  flex: 1 1 auto !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+.dock-bar .dock-btn {
+  flex: 0 1 150px !important;
+  max-width: 150px !important;
+  min-width: 104px !important;
+}
+
+/* ---- 角色弹窗外壳 ---- */
+.zone-modal-box.role {
+  width: min(880px, 94vw) !important;
+}
+
+.role-body {
+  padding: 0 14px 14px !important;
+}
+
+.role-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+/* ---- 左侧立绘 ---- */
+.role-portrait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-portrait-frame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+  background: radial-gradient(circle at 50% 38%, #fffdf3 0%, #fdf1d6 72%);
+  box-shadow: var(--shadow-hard), var(--inner-hi);
+  box-sizing: border-box;
+}
+
+.role-portrait-frame img {
+  width: 84%;
+  height: auto;
+  max-height: 94%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.role-portrait-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #3f2f1c;
+}
+
+/* ---- 右侧页签 ---- */
+.role-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.role-tabs {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--line);
+}
+
+.role-tab {
+  flex: 1 1 0;
+  padding: 9px 0;
+  border: 2px solid var(--line);
+  border-radius: var(--r-pill);
+  background: #fffdf5;
+  color: #5b4630;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.role-tab:hover {
+  background: #fff6e2;
+}
+
+.role-tab.active {
+  background: var(--green);
+  border-color: var(--green-deep);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--green-deep);
+}
+
+.role-panel-area {
+  min-height: 386px;
+  max-height: 56vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* ---- 信息页 ---- */
+.role-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.role-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 9px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fffdf5;
+  box-shadow: 0 3px 0 #e6d9bd;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.role-info-key {
+  font-size: 12px;
+  color: #8a7452;
+}
+
+.role-info-value {
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  color: #3f2f1c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 角色页两个"一次性"操作：性别互换 / 改密码 ---- */
+.role-info-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.role-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.role-actions.is-editing {
+  flex-direction: column;
+}
+
+.role-actions.is-editing .role-action-btn {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.role-pass-area {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+
+.role-pass-area .role-action-btn {
+  width: 100%;
+}
+
+.role-actions.is-editing .role-pass-area {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.role-action-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #4a3a22;
+  background: #fdf3d6;
+  border: 2px solid #e9d7ac;
+  border-radius: 10px;
+  box-shadow: 0 3px 0 #e2cf9f;
+  cursor: pointer;
+  text-align: center;
+}
+
+.role-action-btn:hover:not(:disabled) {
+  background: #fbeabb;
+}
+
+.role-action-btn:disabled,
+.role-action-btn.is-used {
+  color: #9c8a6c;
+  background: #f3ede0;
+  border-color: #e0d8c6;
+  box-shadow: none;
+  cursor: default;
+}
+
+.role-pass-editor {
+  margin: 0;
+}
+
+.role-pass-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: #fffdf5;
+  border: 2px solid #e9d7ac;
+  border-radius: 10px;
+}
+
+.role-pass-tip {
+  font-size: 12px;
+  color: #8a7452;
+}
+
+.role-pass-line {
+  display: flex;
+  gap: 6px;
+}
+
+.role-pass-input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: 15px;
+  color: #3f2f1c;
+  background: #fff;
+  border: 2px solid #e6d9bd;
+  border-radius: 8px;
+}
+
+.role-pass-ok {
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  background: #f0a832;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 3px 0 #cf8a1c;
+  cursor: pointer;
+}
+
+.role-pass-cancel {
+  padding: 7px 10px;
+  font-size: 13px;
+  color: #7a6a50;
+  background: #f3ede0;
+  border: 2px solid #e0d8c6;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ---- 道具页 ---- */
+.role-items-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.role-item-section {
+  margin-bottom: 12px;
+}
+
+.role-item-section h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b5230;
+}
+
+.role-item-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.role-item-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 6px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fffdf5;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.role-item-cell.owned {
+  border-color: #bfa76d;
+  background: #fff9ea;
+}
+
+.role-item-cell.locked {
+  opacity: 0.45;
+}
+
+.role-item-icon {
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.role-item-name {
+  max-width: 100%;
+  font-size: 11px;
+  color: #5b4630;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.role-item-count {
+  font-size: 11px;
+  color: #8a7452;
+}
+
+/* ---- 衣服页 ---- */
+.role-clothes {
+  display: block !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.role-clothes-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 56px 20px;
+  border: 2px dashed #dcc9a4;
+  border-radius: var(--r-md);
+  background: #fffdf5;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.role-clothes-emoji {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.role-clothes-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #3f2f1c;
+}
+
+.role-clothes-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #8a7452;
+}
+
+.role-empty {
+  margin: 0;
+  padding: 40px 0;
+  text-align: center;
+  color: #8a7452;
+}
+
+/* ---------------- V18 宠物弹窗页签 + 页签文字对比度修正 ---------------- */
+/* 页签在 :focus 后文字发白看不清，补强对比度 */
+.role-tab {
+  color: #5b4630 !important;
+}
+
+.role-tab.active {
+  color: #fffdf6 !important;
+}
+
+.role-tab:focus {
+  outline: 2px solid rgba(242, 178, 62, 0.55);
+  outline-offset: 2px;
+}
+
+/* 滚动条换暖色，跟纸面风格一致（原来沿用紫色） */
+.role-panel-area::-webkit-scrollbar,
+.zone-modal-body::-webkit-scrollbar,
+.pet-items-view::-webkit-scrollbar {
+  width: 10px;
+}
+
+.role-panel-area::-webkit-scrollbar-track,
+.zone-modal-body::-webkit-scrollbar-track,
+.pet-items-view::-webkit-scrollbar-track {
+  background: #f2e8d4;
+  border-radius: 999px;
+}
+
+.role-panel-area::-webkit-scrollbar-thumb,
+.zone-modal-body::-webkit-scrollbar-thumb,
+.pet-items-view::-webkit-scrollbar-thumb {
+  background: #c9b294;
+  border-radius: 999px;
+}
+
+/* ---- 宠物弹窗顶部页签 ---- */
+.pet-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--line);
+}
+
+.pet-tabs .role-tab {
+  flex: 0 1 180px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+/* ---- 宠物道具页 ---- */
+.pet-items-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 320px;
+  max-height: 58vh;
+  overflow-y: auto;
+  padding: 2px 4px 4px 2px;
+}
+
+.pet-items-view[hidden] {
+  display: none !important;
+}
+
+.pet-item-card {
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+  background: #fffdf5;
+  box-shadow: 0 3px 0 #e6d9bd;
+  box-sizing: border-box;
+}
+
+.pet-item-card h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #3f2f1c;
+}
+
+.pet-item-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #6b5230;
+}
+
+.pet-info-view[hidden] {
+  display: none !important;
+}
+
+/* 页签选中态强制上色（宠物弹窗里被 .pet-tabs 的规则盖掉了背景） */
+.pet-tabs .role-tab.active,
+.pet-tabs .role-tab.active:hover,
+.role-tabs .role-tab.active,
+.role-tabs .role-tab.active:hover {
+  background: var(--green) !important;
+  border-color: var(--green-deep) !important;
+  color: #fffdf6 !important;
+}
+
+.pet-tabs .role-tab:not(.active):hover,
+.role-tabs .role-tab:not(.active):hover {
+  background: #fff6e2 !important;
+  color: #5b4630 !important;
+}
+
+
+/* ---------------- V19 场景页全屏化：图铺满 + 顶栏浮层 + 道具抽屉 ---------------- */
+/* 原来的顶条是实体卡片（占 110px 高度），把场景图往下挤，看着就是"图上多一块白"。
+   这里把它彻底改成浮层：不占布局高度，只浮在图上。 */
+
+#sceneView {
+  height: 100% !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+#sceneView .scene-inner-panel {
+  display: block !important;
+  height: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 场景舞台：撑满视口减底栏，跟大地图一张图的尺寸感一致 */
+#sceneView .scene-atmosphere {
+  position: relative !important;
+  width: 100% !important;
+  height: calc(100vh - 118px) !important;
+  min-height: 430px !important;
+  left: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+#sceneView .scene-stage {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+#sceneView .scene-stage-bg {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* 顶栏：绝对定位浮层，透明背景 */
+#sceneView .scene-topbar {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 20 !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px 20px !important;
+  width: auto !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+#sceneView .scene-topbar > * {
+  pointer-events: auto !important;
+}
+
+/* 返回大世界：无底色方案 → 极淡半透明底 + 白字深描边，浅背景也读得清 */
+#sceneView .scene-topbar .back-button {
+  flex: 0 0 auto !important;
+  padding: 8px 16px !important;
+  border: 0 !important;
+  border-radius: var(--r-pill) !important;
+  background: rgba(24, 20, 14, 0.26) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 8px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+#sceneView .scene-topbar .back-button:hover {
+  background: rgba(24, 20, 14, 0.42) !important;
+}
+
+#sceneView .scene-topbar .back-button .button-icon {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* 场景名：白字 + 阴影，不要纸条 */
+#sceneView #sceneInnerTitle {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65), 0 0 3px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* 道具胶囊：顶栏右侧 */
+#sceneView .scene-bag-btn {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  padding: 8px 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.72) !important;
+  border-radius: var(--r-pill) !important;
+  background: rgba(24, 20, 14, 0.3) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+  transition: background 140ms ease !important;
+}
+
+#sceneView .scene-bag-btn:hover {
+  background: rgba(24, 20, 14, 0.46) !important;
+}
+
+/* 道具抽屉：默认收起，点胶囊从底部滑出 */
+#sceneView #sceneInventory {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 126px !important;
+  transform: translate(-50%, 150%) !important;
+  width: min(780px, 93vw) !important;
+  max-height: 44vh !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 14px 16px !important;
+  border: 2px solid var(--line) !important;
+  border-radius: var(--r-lg) !important;
+  background: rgba(255, 251, 240, 0.98) !important;
+  box-shadow: 0 6px 0 #cdbb9c, 0 -10px 28px rgba(0, 0, 0, 0.22) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: transform 230ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease !important;
+  z-index: 45 !important;
+}
+
+#sceneView #sceneInventory.open {
+  transform: translate(-50%, 0) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* 抽屉内部：一行放得下 4 个道具，说明文字在左 */
+#sceneView #sceneInventory > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+#sceneView #sceneInventory .inventory-item-grid {
+  display: flex !important;
+  gap: 8px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+  flex-wrap: nowrap !important;
+}
+
+#sceneView #sceneInventory .inventory-item {
+  flex: 0 1 84px !important;
+  min-width: 58px !important;
+  max-width: 84px !important;
+  padding: 6px 6px 5px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 2px !important;
+  border: 2px solid var(--line) !important;
+  border-radius: var(--r-md) !important;
+  background: #fffdf5 !important;
+  box-sizing: border-box !important;
+}
+
+#sceneView #sceneInventory .inventory-item.locked {
+  opacity: 0.5 !important;
+}
+
+#sceneView #sceneInventory .inventory-item-name {
+  width: 100% !important;
+  max-width: 100% !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #6b5230 !important;
+}
+
+/* 场景底部的说明文字往上提，别被底栏压住 */
+#sceneView .scene-stage-desc {
+  bottom: 14px !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65) !important;
+}
+
+
+/* ---------------- V20 场景页收尾：提示条收纳 + 高度对齐底栏 ---------------- */
+/* 场景图高度改成减 112px，跟底栏严丝合缝，不留缝 */
+#sceneView .scene-atmosphere {
+  height: calc(100vh - 112px) !important;
+}
+
+/* 场景提示条原来是文档流里的一块（占 36px 高），会露出一条空米色条。
+   改成浮层，贴在底栏上方；内容为空时彻底不显示。 */
+#sceneView #sceneResult {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 124px !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  max-width: 68% !important;
+  z-index: 46 !important;
+}
+
+#sceneView #sceneResult:empty {
+  display: none !important;
+}
+
+/* 顶栏间距：返回按钮和场景名之间留出呼吸感 */
+#sceneView .scene-topbar {
+  gap: 22px !important;
+}
+
+
+/* ---------------- V21 场景道具抽屉细节：名字横排 + 图标放大 ---------------- */
+#sceneView #sceneInventory .inventory-item {
+  flex: 0 1 92px !important;
+  min-width: 76px !important;
+  max-width: 92px !important;
+  padding: 8px 8px 7px !important;
+  gap: 3px !important;
+}
+
+#sceneView #sceneInventory .inventory-item-icon {
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+}
+
+#sceneView #sceneInventory .inventory-item-name {
+  writing-mode: horizontal-tb !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  text-align: center !important;
+  color: #6b5230 !important;
+}
+
+#sceneView #sceneInventory .inventory-heading {
+  font-size: 13px !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  color: #6b5230 !important;
+  font-weight: 800 !important;
+}
+
+
+/* ---------------- V22 宠物弹窗：一排六格 + 右栏页签切换 ---------------- */
+
+/* 布局改成：顶部横跨一整行的宠物栏 + 下面左右两栏 */
+#petInfoView .pet-three-col {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+#petColList {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  overflow: visible !important;
+}
+
+#petColDetail {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+#petColAbility {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/* —— 宠物栏：一排六格 —— */
+#petColList .pet-team-panel {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+#petColList .pet-team-list {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+#petColList .pet-team-item {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 8px 6px !important;
+  box-sizing: border-box !important;
+  border-radius: var(--r-md) !important;
+  height: auto !important;
+}
+
+#petColList .pet-team-item .pet-team-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+
+#petColList .pet-team-img {
+  width: 42px !important;
+  height: 42px !important;
+  object-fit: contain !important;
+  flex: 0 0 auto !important;
+}
+
+#petColList .pet-team-meta {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  text-align: center !important;
+}
+
+#petColList .pet-team-name {
+  display: block !important;
+  width: 100% !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#petColList .pet-team-level {
+  display: block !important;
+  width: 100% !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #8a7657 !important;
+}
+
+/* 空槽：虚线框 + 「空位」，让 6 只的容量一眼可见 */
+#petColList .pet-team-item.is-empty {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 92px !important;
+  border: 2px dashed #cbbda3 !important;
+  background: rgba(255, 253, 245, 0.65) !important;
+  box-shadow: none !important;
+}
+
+#petColList .pet-team-empty-label {
+  font-size: 12px !important;
+  color: #a08e6c !important;
+  letter-spacing: 2px !important;
+}
+
+/* —— 右栏：页签在顶部 + 内容区 —— */
+#petColAbility {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  overflow-y: auto !important;
+  padding-right: 6px !important;
+}
+
+#petTabs {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#petTabs .role-tab {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  padding: 8px 10px !important;
+  font-size: 13px !important;
+  border-radius: var(--r-pill) !important;
+}
+
+#petColAbility .stat-panel {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+}
+
+#petColAbility #petItemsView {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#petColAbility[data-mode="items"] .stat-panel {
+  display: none !important;
+}
+
+#petColAbility #petActionBar {
+  margin-top: auto !important;
+  flex: 0 0 auto !important;
+}
+
+/* —— 中栏：宠物大图撑满，不留大片空白 —— */
+#petColDetail {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+}
+
+#petColDetail .hatch-panel {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#petColDetail .hatch-visual {
+  flex: 1 1 auto !important;
+  min-height: 240px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+#petColDetail .hatch-visual img {
+  max-height: 100% !important;
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+
+/* ---------------- V23 宠物弹窗中栏：大图撑满，别留空白 ---------------- */
+#petColDetail .hatch-content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#petColDetail .pet-card {
+  flex: 1 1 auto !important;
+  min-height: 250px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  padding: 10px !important;
+  box-sizing: border-box !important;
+}
+
+#petColDetail .pet-avatar {
+  max-height: 100% !important;
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+#petColDetail .hatch-copy {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+}
+
+#petColDetail .hatch-copy h3 {
+  font-size: 15px !important;
+  line-height: 1.35 !important;
+  margin: 0 0 4px !important;
+  white-space: normal !important;
+}
+
+#petColDetail .pet-evolve-line {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  padding: 6px 10px !important;
+  border-radius: var(--r-sm) !important;
+  background: #fdf4dd !important;
+  border: 2px solid #e8d8b4 !important;
+  color: #7a5c2a !important;
+  white-space: normal !important;
+}
+
+
+/* ---------------- V24 宠物右栏滚动条换暖色（去紫） ---------------- */
+#petColAbility {
+  scrollbar-width: thin !important;
+  scrollbar-color: #c2b294 #f4ecda !important;
+  padding-right: 8px !important;
+}
+
+#petColAbility::-webkit-scrollbar {
+  width: 9px !important;
+}
+
+#petColAbility::-webkit-scrollbar-track {
+  background: #f4ecda !important;
+  border-radius: 5px !important;
+}
+
+#petColAbility::-webkit-scrollbar-thumb {
+  background: #c2b294 !important;
+  border-radius: 5px !important;
+  border: 2px solid #f4ecda !important;
+}
+
+#petColDetail::-webkit-scrollbar {
+  width: 9px !important;
+}
+
+#petColDetail::-webkit-scrollbar-track {
+  background: #f4ecda !important;
+  border-radius: 5px !important;
+}
+
+#petColDetail::-webkit-scrollbar-thumb {
+  background: #c2b294 !important;
+  border-radius: 5px !important;
+  border: 2px solid #f4ecda !important;
+}
+
+/* 宠物栏标题更紧凑一点，给六个槽位多留空间 */
+#petColList .panel-heading {
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+}
+
+#petColList .panel-heading h2 {
+  font-size: 14px !important;
+  margin: 0 !important;
+}
+
+
+/* ---------------- V25 角色弹窗：页签右竖排 + 内容撑满 ---------------- */
+#roleModal .role-layout {
+  grid-template-columns: 220px minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+#roleModal .role-main {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 92px !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+#roleModal #rolePanelArea {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding-right: 6px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #c2b294 #f4ecda !important;
+}
+
+#roleModal .role-tabs {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: auto !important;
+  align-self: start !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#roleModal .role-tabs .role-tab {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  padding: 12px 6px !important;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  border-radius: var(--r-md) !important;
+  writing-mode: horizontal-tb !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+
+/* 信息 8 格：两列自适应，把下方空白吃掉 */
+#roleModal .role-info-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-auto-rows: minmax(74px, 1fr) !important;
+  gap: 10px !important;
+  height: 100% !important;
+  align-content: stretch !important;
+}
+
+/* 道具：每行 5 格 */
+#roleModal .role-item-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+#roleModal #rolePanelArea::-webkit-scrollbar {
+  width: 9px !important;
+}
+
+#roleModal #rolePanelArea::-webkit-scrollbar-track {
+  background: #f4ecda !important;
+  border-radius: 5px !important;
+}
+
+#roleModal #rolePanelArea::-webkit-scrollbar-thumb {
+  background: #c2b294 !important;
+  border-radius: 5px !important;
+  border: 2px solid #f4ecda !important;
+}
+
+
+/* ---------------- V26 角色弹窗页签对比度 + 道具四列 ---------------- */
+/* 竖排页签选中态强制可见（白字必须配绿底，否则白底白字看不见） */
+#roleModal .role-tabs .role-tab.active,
+#roleModal .role-tabs .role-tab.active:hover,
+#roleModal .role-tabs .role-tab.active:focus {
+  background: var(--green) !important;
+  border-color: var(--green-deep) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+#roleModal .role-tabs .role-tab:not(.active) {
+  background: #fffdf6 !important;
+  color: #5b4630 !important;
+}
+
+#roleModal .role-tabs .role-tab:not(.active):hover {
+  background: #fff6e2 !important;
+  color: #5b4630 !important;
+}
+
+/* 每个场景固定 4 个道具，改成 4 列，格子更宽也不空位 */
+#roleModal .role-item-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+#roleModal .role-item-cell {
+  padding: 10px 8px !important;
+  box-sizing: border-box !important;
+}
+
+/* ---------------- V27 大世界铺满 / 场景去白边 / 提示条透明 ---------------- */
+/* 1) 场景页底部那条米白：底栏真实高度只有 48px，旧 calc(100vh - 112px) 多留了 64px */
+#sceneView .scene-inner-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#sceneView .scene-atmosphere {
+  height: calc(100vh - 50px) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+#sceneView .scene-stage,
+#sceneView .scene-atmosphere .scene-stage {
+  border-radius: 0 !important;
+}
+#sceneView .scene-stage-bg {
+  object-fit: cover;
+}
+
+/* 2) 大世界：地图按高度撑满，左右空档用天空渐变接过去，看起来是一整张图 */
+#worldView .scene-grid.map-mode,
+.app-grid.is-student #sceneGrid.map-mode {
+  padding: 0 !important;
+  overflow: hidden;
+  background: radial-gradient(115% 95% at 50% 38%, #d8effb 0%, #b6e2f6 42%, #93d1ea 72%, #7cc4e2 100%);
+}
+#sceneGrid .continent {
+  flex: 0 0 auto;
+  max-width: none !important;
+  max-height: none !important;
+  /* 宽屏：按高度放大 1.16 倍，左右留白压到最小；窄屏：按宽度铺满，不横向溢出 */
+  width: min(100%, calc((100vh - 48px) * 16 / 9 * 1.16)) !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 auto;
+}
+#sceneGrid .continent-bg {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* 3) 全局提示条：透明底 + 黑字 + 白描边，浮在画面上不占布局 */
+#resultMessage,
+#resultMessage.global-result {
+  position: fixed !important;
+  top: 74px !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+  z-index: 60 !important;
+  pointer-events: none !important;
+  max-width: 82vw;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #14120d !important;
+  font-weight: 800 !important;
+  padding: 2px 8px !important;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 3px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 255, 255, 0.8), 0 0 18px rgba(255, 255, 255, 0.6);
+}
+/* 没内容时彻底不占位，避免底部露出一条米白 */
+#resultMessage:empty {
+  display: none !important;
+}
+#resultMessage.warning {
+  color: #8a2b12 !important;
+}
+
+/* 覆盖 V16「场景视图里把提示条压到底部 132px」的规则：
+   同权重 + 后出现，提示条统一浮在顶部，不再压住底部道具区 */
+.game-main:has(#sceneView:not([hidden])) #resultMessage,
+.game-main:has(#sceneView:not([hidden])) .global-result {
+  top: 76px !important;
+  bottom: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #14120d !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 3px rgba(255, 255, 255, 0.95), 0 0 12px rgba(255, 255, 255, 0.85);
+}
+.game-main:has(#sceneView:not([hidden])) #resultMessage:empty {
+  display: none !important;
+}
+
+/* 4) 场景内提示条同样透明化 */
+#sceneResult,
+#sceneResult.result-message {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #14120d !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 3px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+/* 覆盖旧规则 #sceneView #sceneResult（两个 id + !important，权重高于 #sceneResult）：
+   同权重 + 后出现，把米黄胶囊换成透明黑字，并移到画面偏上，不压底部道具区 */
+#sceneView #sceneResult {
+  top: 96px !important;
+  bottom: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: max-content !important;
+  max-width: 92% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin: 0 !important;
+  padding: 2px 10px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #14120d !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  text-align: center;
+  z-index: 9 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 3px rgba(255, 255, 255, 0.95), 0 0 12px rgba(255, 255, 255, 0.85);
+}
+#sceneView #sceneResult:empty {
+  display: none !important;
+}
+
+/* ================= V28 洛克贝货币体系 ================= */
+.store-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 2px 18px 0;
+}
+
+.fashion-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 10px;
+}
+
+.fashion-shop-card {
+  background: #fff;
+  border: 2px solid #e6e0d3;
+  border-radius: 14px;
+  padding: 18px 10px;
+  text-align: center;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .08);
+}
+
+.fashion-shop-card.is-locked {
+  opacity: .62;
+  filter: grayscale(.35);
+}
+
+.fashion-shop-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.fashion-shop-name {
+  margin-top: 8px;
+  font-weight: 800;
+  color: #3c3830;
+  font-size: 14px;
+}
+
+.fashion-shop-tag {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #9a8f7c;
+}
+
+.shop-note {
+  text-align: center;
+  color: #7d7466;
+  font-size: 13px;
+  margin: 6px 0 2px;
+}
+
+/* ================= 时装系统：衣柜 + 商店 ================= */
+.fashion-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 14px 0 10px;
+}
+
+.fashion-shop-card {
+  background: #fff;
+  border: 2px solid #e6e0d3;
+  border-radius: 14px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.fashion-shop-card.is-owned {
+  border-color: #8fbf6b;
+  background: #fbfff5;
+}
+
+.fashion-shop-icon {
+  width: 100%;
+  height: 152px;
+  background: linear-gradient(180deg, #fdf6e3, #f2ead6);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.fashion-shop-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fashion-shop-name {
+  margin-top: 4px;
+  font-weight: 800;
+  color: #3c3830;
+  font-size: 14px;
+}
+
+.fashion-shop-tag {
+  font-size: 12px;
+  color: #9a8f7c;
+}
+
+.fashion-shop-intro {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8a8171;
+  margin: 2px 0 4px;
+  min-height: 30px;
+}
+
+.fashion-shop-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.fashion-buy-bell,
+.fashion-buy-item,
+.fashion-wear-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 9px;
+  padding: 7px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+}
+
+.fashion-buy-bell {
+  background: #5b9bd5;
+}
+
+.fashion-buy-item {
+  background: #7cae5c;
+}
+
+.fashion-wear-btn {
+  background: #d9a441;
+  margin-top: auto;
+}
+
+.fashion-wear-btn.is-on {
+  background: #e8e2d2;
+  color: #8a8171;
+  cursor: default;
+}
+
+.fashion-buy-bell:disabled,
+.fashion-buy-item:disabled {
+  background: #ddd6c7;
+  color: #a89f8d;
+  cursor: not-allowed;
+}
+
+#roleModal .role-layout.is-clothes {
+  grid-template-columns: 132px minmax(0, 1fr) !important;
+}
+
+#roleModal .role-layout.is-clothes .role-portrait-frame {
+  min-height: 0 !important;
+}
+
+.outfit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)) !important;
+  gap: 8px;
+}
+
+/* 角色弹窗 · 衣柜 */
+.role-clothes-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px 8px;
+  border-bottom: 1px solid #ece5d6;
+  margin-bottom: 10px;
+}
+
+.role-clothes-head strong {
+  font-size: 15px;
+  color: #3c3830;
+}
+
+.role-clothes-head span {
+  font-size: 12px;
+  color: #9a8f7c;
+}
+
+.outfit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 9px;
+}
+
+.outfit-card {
+  border: 2px solid #e6e0d3;
+  border-radius: 11px;
+  background: #fff;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: transform .12s ease, border-color .12s ease;
+}
+
+.outfit-card:hover {
+  transform: translateY(-2px);
+  border-color: #d9a441;
+}
+
+.outfit-card.is-wearing {
+  border-color: #d9a441;
+  background: #fff8e6;
+  box-shadow: 0 0 0 2px rgba(217, 164, 65, .25);
+}
+
+.outfit-card.is-locked {
+  opacity: .55;
+  filter: grayscale(.5);
+}
+
+.outfit-thumb {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  background: linear-gradient(180deg, #fdf6e3, #f5efe2);
+  border-radius: 8px;
+}
+
+.outfit-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #3c3830;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.outfit-tag {
+  font-size: 10px;
+  color: #9a8f7c;
+}
+
+.outfit-card.is-wearing .outfit-tag {
+  color: #b07d1c;
+  font-weight: 700;
+}
+
+.role-clothes-note {
+  margin: 10px 0 2px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a8171;
+}
+/* ================= V29 老师后台：名单 + 详情 ================= */
+.teacher-select-hidden {
+  display: none !important;
+}
+
+.teacher-roster-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.teacher-roster-head h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #2f2c26;
+}
+
+#teacherRosterSearch {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d8d2c4;
+  background: #fff;
+  font-size: 13px;
+}
+
+.teacher-roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.teacher-roster-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 2px solid #ddd6c6;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s, background .15s;
+}
+
+.teacher-roster-chip:hover {
+  border-color: #9fd0ab;
+}
+
+.teacher-roster-chip.active {
+  border-color: #3f9d62;
+  background: #eef8ef;
+}
+
+.teacher-roster-name {
+  font-weight: 800;
+  font-size: 13px;
+  color: #2f2c26;
+}
+
+.teacher-roster-bell {
+  font-size: 12px;
+  color: #8a7f6b;
+}
+
+.teacher-detail {
+  border-top: 1px solid #e6e0d2;
+  padding-top: 10px;
+  margin-bottom: 10px;
+}
+
+.teacher-detail-info {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.teacher-info-cell {
+  background: #fff;
+  border: 1px solid #e6e0d2;
+  border-radius: 10px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teacher-info-key {
+  font-size: 11px;
+  color: #8a7f6b;
+}
+
+.teacher-info-value {
+  font-weight: 800;
+  color: #2f2c26;
+  font-size: 14px;
+}
+
+.teacher-item-section {
+  margin-bottom: 10px;
+}
+
+.teacher-item-section h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #5a5346;
+}
+
+.teacher-item-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 6px;
+}
+
+.teacher-item-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #e6e0d2;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.teacher-item-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: #3c3830;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teacher-item-count {
+  font-size: 12px;
+  font-weight: 800;
+  color: #4a4436;
+}
+
+.teacher-item-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid #cfc7b5;
+  background: #f7f3e8;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.teacher-item-btn.plus {
+  background: #e7f6ea;
+  border-color: #9fd0ab;
+}
+
+.teacher-item-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.teacher-detail-empty,
+.teacher-roster-empty {
+  color: #8a7f6b;
+  font-size: 13px;
+  margin: 6px 0;
+}
+
+/* ================= 老师模式：纯后台界面 ================= */
+body.is-teacher-mode .app-grid {
+  display: block !important;
+}
+
+body.is-teacher-mode .app-grid > .panel.profile-panel,
+body.is-teacher-mode .app-grid > .game-area {
+  display: none !important;
+}
+
+body.is-teacher-mode .teacher-panel {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 100vh;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #fbf7ec;
+  padding: 24px 28px 48px;
+}
+
+body.is-teacher-mode .app-shell .topbar {
+  display: none !important;
+}
+
+body.is-teacher-mode .teacher-panel #teacherRoster,
+body.is-teacher-mode .teacher-panel .teacher-detail {
+  max-width: 1180px;
+}
+
+body.is-teacher-mode .teacher-panel #teacherTitle {
+  font-size: 22px;
+}
+/* 后台道具行：图标 + 名称，整体不超出面板 */
+body.is-teacher-mode .teacher-panel *,
+.teacher-panel * {
+  box-sizing: border-box;
+}
+
+#teacherRoster,
+.teacher-item-list,
+.teacher-detail,
+.teacher-detail-info {
+  width: 100%;
+  max-width: 100%;
+}
+
+.teacher-roster {
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+}
+
+.teacher-item-list {
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+}
+
+.teacher-item-icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  vertical-align: middle;
+  flex: 0 0 auto;
+}
+
+.teacher-item-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.teacher-item-label {
+  vertical-align: middle;
+}
+
+.teacher-item-name {
+  display: flex;
+  align-items: center;
+}
+body.is-teacher-mode .app-shell {
+  padding: 0 !important;
+  max-width: none !important;
+}
+
+body.is-teacher-mode .teacher-panel {
+  box-sizing: border-box !important;
+  overflow-x: hidden;
+}
+
+body.is-teacher-mode .teacher-panel .panel-heading,
+body.is-teacher-mode .teacher-panel .teacher-roster-head {
+  max-width: 100%;
+}
+
+.teacher-item-list {
+  grid-template-columns: repeat(auto-fill, minmax(166px, 1fr));
+}
+
+.teacher-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.teacher-controls {
+  min-width: 0;
+}
+
+.teacher-controls > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.teacher-detail,
+.teacher-detail-info,
+.teacher-item-section,
+.teacher-item-list,
+.teacher-roster,
+.teacher-roster-head {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.teacher-item-row {
+  min-width: 0;
+}
+/* ---- 市场：卖家自己定价 ---- */
+.sell-card { cursor: pointer; }
+.sell-card.is-editing { cursor: default; }
+.sell-price-form { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 4px 2px; }
+.sell-price-title { font-size: 13px; color: #3f2f1c; }
+.sell-price-tip { font-size: 11px; color: #8a7452; }
+.sell-price-row { display: flex; gap: 6px; align-items: center; }
+.sell-price-input {
+  width: 92px; padding: 6px 8px; font-size: 15px; color: #3f2f1c;
+  border: 2px solid #e6d9bd; border-radius: 8px; background: #fff;
+}
+.sell-price-ok {
+  padding: 6px 12px; font-size: 13px; font-weight: 800; color: #fff;
+  background: #f0a832; border: none; border-radius: 8px;
+  box-shadow: 0 3px 0 #cf8a1c; cursor: pointer;
+}
+.sell-price-cancel {
+  padding: 6px 10px; font-size: 13px; color: #7a6a50;
+  background: #f3ede0; border: 2px solid #e0d8c6; border-radius: 8px; cursor: pointer;
+}
+/* ===== 排行榜四个榜单 tab 适配（战力 / 经验 / 财富 / 时装） ===== */
+.rank-tabs {
+  flex-wrap: wrap;
+}
+
+.rank-tab {
+  flex: 1 1 calc(25% - 8px);
+  min-width: 64px;
+  padding: 7px 4px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.rank-value {
+  font-variant-numeric: tabular-nums;
+}
+/* 四个榜单 tab 统一配色，避免继承到白字白底看不见 */
+.rank-tabs .rank-tab {
+  color: #4a3a22;
+  background: #fffdf7;
+  border-color: #e8dcc6;
+}
+
+.rank-tabs .rank-tab.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ff9800, #ffb74d);
+  border-color: #ff9800;
+  font-weight: 600;
+}
+/* 榜单 tab 最终配色（用 :not(.active) + !important 兜住，避免别处的规则把非激活态染成白字白底） */
+#rankModal .rank-tab:not(.active),
+#rankView .rank-tab:not(.active) {
+  color: #4a3a22 !important;
+  background: #fffdf7 !important;
+  background-image: none !important;
+  border-color: #e8dcc6 !important;
+}
+
+#rankModal .rank-tab.active,
+#rankView .rank-tab.active {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #ff9800, #ffb74d) !important;
+  border-color: #ff9800 !important;
+}
+/* ===== 排行榜点赞区 ===== */
+.rank-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex: 0 0 auto;
+  margin-left: 8px;
+}
+
+.rank-liked {
+  font-size: 0.72rem;
+  color: #8a6a3a;
+  white-space: nowrap;
+}
+
+.rank-like-btn {
+  border: 1px solid #ffb74d;
+  background: #fff8e8;
+  color: #b26a00;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.rank-like-btn:hover:not(:disabled) {
+  background: #ffe9c2;
+}
+
+.rank-like-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#rankModal .rank-value,
+#rankView .rank-value {
+  font-size: 0.88rem;
+}
+
+#rankModal .rank-item,
+#rankView .rank-item {
+  gap: 6px;
+}
+
+/* 角色面板"被赞"这一格稍微醒目一点 */
+#roleLikedValue {
+  color: #d17b00;
+}
+/* 榜单右侧点赞区收窄一点，别把战力数字挤歪 */
+#rankModal .rank-value, #rankView .rank-value { margin-right: 4px; }
+#rankModal .rank-actions, #rankView .rank-actions { min-width: 58px; flex-shrink: 0; }
+/* 排行榜点赞说明条 */
+.rank-like-tip {
+  font-size: 0.72rem;
+  color: #8a7355;
+  background: #fff8e8;
+  border: 1px dashed #f0d0a0;
+  border-radius: 8px;
+  padding: 5px 8px;
+  margin: 0 0 6px;
+  line-height: 1.35;
+}
+.rank-like-btn { padding: 3px 10px; }
+#rankModal .rank-item, #rankView .rank-item { padding-right: 10px; }
+#rankModal .rank-actions, #rankView .rank-actions { gap: 3px; }
+/* 被赞数 + 点赞按钮改成同一行，省高度不挤 */
+#rankModal .rank-actions, #rankView .rank-actions {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+/* 副标题别换行，挤了就用省略号 */
+#rankModal .rank-sub, #rankView .rank-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.7rem; }
+#rankModal .rank-info, #rankView .rank-info { min-width: 0; flex: 1 1 auto; }
+#rankModal .rank-value, #rankView .rank-value { white-space: nowrap; flex-shrink: 0; }
+/* 角色信息格：加了"被赞"这一行后格子更挤，字号收一点、允许换行，别再显示成"引…" */
+#roleModal .role-info-item { padding: 6px 7px !important; gap: 3px !important; }
+#roleModal .role-info-key { font-size: 11px !important; }
+#roleModal .role-info-value {
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere !important;
+  text-overflow: clip !important;
+}
+/* 信息格行高收一点，让"被赞"这一行不用滚动也能看到 */
+#roleModal .role-info-grid {
+  grid-auto-rows: minmax(56px, auto) !important;
+  gap: 8px !important;
+}
+/* 再收一点，让下面两个一次性按钮也露出来 */
+#roleModal .role-info-grid { grid-auto-rows: minmax(50px, auto) !important; gap: 7px !important; }
+#roleModal .role-info-pane { gap: 7px !important; }
+/* 信息格改三列，8 格刚好三行，下面两个按钮能完整露出来 */
+#roleModal .role-info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-auto-rows: minmax(48px, auto) !important;
+  gap: 7px !important;
+}
+/* 三列太窄，回到两列；按钮文字缩短后一行就能放下 */
+#roleModal .role-info-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-auto-rows: minmax(50px, auto) !important;
+  gap: 7px !important;
+}
+#roleModal .role-actions button {
+  font-size: 12px !important;
+  padding: 6px 4px !important;
+  min-height: 34px !important;
+  white-space: nowrap !important;
+}
+/* 信息页不要再出横向滚动条 */
+#roleModal #rolePanelArea { overflow-x: hidden !important; }
+#roleModal .role-actions button { overflow: hidden; text-overflow: ellipsis; }
+/* 两个一次性按钮等宽两列，文字不会被切 */
+#roleModal .role-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+/* ===== 多人可见 · 同伴图层 ===== */
+.peer-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.peer-avatar {
+  position: absolute;
+  height: 20%;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  transition: left 0.3s linear, top 0.3s linear;
+  will-change: left, top;
+}
+
+.peer-avatar.is-map {
+  height: 78px;
+  width: 46px;
+}
+
+.peer-avatar.is-teleport {
+  transition: none;
+}
+
+.peer-avatar.is-leaving {
+  opacity: 0.4;
+  transition: opacity 0.2s linear;
+}
+
+.peer-avatar .peer-sprite {
+  height: 100%;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.32));
+}
+
+.peer-avatar.is-map .peer-sprite {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.peer-avatar .peer-pet {
+  position: absolute;
+  height: 34%;
+  left: -30%;
+  top: 60%;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.28));
+}
+
+.peer-name {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  padding: 1px 7px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #fff7e2;
+  background: rgba(46, 32, 18, 0.82);
+  border: 1px solid rgba(255, 232, 190, 0.55);
+  border-radius: 6px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+/* 点赞奖励提示：中间弹一下「恭喜获得」，1 秒后自己淡出 */
+.coin-gain {
+  position: fixed;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%) scale(0.88);
+  z-index: 10050;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 30px 16px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffaf0, #ffe9bd);
+  border: 2px solid rgba(201, 141, 44, 0.85);
+  box-shadow: 0 12px 30px rgba(46, 32, 18, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  opacity: 0;
+  animation: coinGainIn 0.24s ease-out forwards;
+}
+
+.coin-gain-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #8a5a1a;
+  letter-spacing: 0.5px;
+}
+
+.coin-gain-amount {
+  font-size: 28px;
+  font-weight: 900;
+  color: #d97706;
+  line-height: 1.15;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.coin-gain-total {
+  font-size: 12px;
+  color: #9a7a4a;
+}
+
+.coin-gain.is-out {
+  animation: coinGainOut 0.3s ease-in forwards;
+}
+
+@keyframes coinGainIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.88); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes coinGainOut {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to   { opacity: 0; transform: translate(-50%, -62%) scale(0.96); }
+}
+/* 探索点悬停小面板：野生等级 / 遇敌概率 / 道具概率 */
+.spot-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  transform: translate(-50%, 0);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: rgba(28, 22, 14, 0.92);
+  border: 1px solid rgba(255, 220, 160, 0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  color: #ffe8be;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.spot-tip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(28, 22, 14, 0.92);
+}
+
+.spot-tip.is-below {
+  top: calc(100% + 9px);
+  bottom: auto;
+}
+
+.spot-tip.is-below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: rgba(28, 22, 14, 0.92);
+}
+
+.stage-spot:hover .spot-tip,
+.stage-spot:focus-visible .spot-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.spot-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spot-tip-icon {
+  font-size: 12px;
+}
+
+.spot-tip-text {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+/* 左右边缘的探索点：面板向内对齐，避免被舞台裁切 */
+.spot-tip.is-left {
+  left: -4px;
+  transform: translate(0, 0);
+}
+
+.spot-tip.is-right {
+  left: auto;
+  right: -4px;
+  transform: translate(0, 0);
+}
+
+.spot-tip.is-left::after {
+  left: 26px;
+}
+
+.spot-tip.is-right::after {
+  left: auto;
+  right: 26px;
+  transform: none;
+}
+
+.stage-spot:hover .spot-tip.is-left,
+.stage-spot:focus-visible .spot-tip.is-left,
+.stage-spot:hover .spot-tip.is-right,
+.stage-spot:focus-visible .spot-tip.is-right {
+  transform: translate(0, 0);
+}
+
+/* ---------------- 登录三角色外壳（学生 / 家长 / 老师） ---------------- */
+/* 三个 tab 挤在 340px 卡片里，字缩一点、别换行 */
+.login-tab {
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+/* 学生登录后的选择页：卡片内容换成「你好 + 两个按钮」 */
+#studentLanding {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.landing-hello {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #3b3125;
+  text-align: center;
+}
+
+.landing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 学习台按钮走"次要按钮"：白底绿字，视觉上比开始游戏轻一档 */
+#btnStudyRoom.is-ghost {
+  background: var(--surface-hi);
+  color: var(--green-deep);
+  border: 2px solid var(--line);
+  box-shadow: 0 3px 0 #d8c8ab, var(--inner-hi);
+}
+
+#btnStudyRoom.is-ghost:hover:not(:disabled) {
+  background: #f6f1e4;
+}
+
+#btnStudyRoom.is-ghost:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: var(--inner-hi);
+}
+
+/* 行内提示：不弹 alert，只在卡片里露一行字 */
+.login-hint {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #b9751a;
+  text-align: center;
+}
+
+/* 切换账号做成文字链接，不抢按钮位置 */
+.login-link {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 顶栏右侧：学习台按钮 + 存档状态 */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 学生端游戏是全屏层（.game-area fixed z-index:15），会把顶栏盖住，
+   所以这个「回学习台」按钮单独浮到底栏右侧的空白处，z-index 压在全屏层之上 */
+#btnBackHome {
+  position: fixed;
+  right: 16px;
+  bottom: 7px;
+  z-index: 40;
+}
+
+.topbar-home {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface-hi);
+  color: var(--green-deep);
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 2px 0 #d8c8ab;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.topbar-home:hover {
+  background: #f6f1e4;
+}
+
+.topbar-home:active {
+  transform: translateY(2px);
+  box-shadow: none;
 }

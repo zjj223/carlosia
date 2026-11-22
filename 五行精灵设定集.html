@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>五行精灵设定集 · 卡罗西亚大陆</title>
+<style>
+  :root {
+    --bg: #0b0f19;
+    --card: #141a26;
+    --line: rgba(255, 255, 255, .08);
+    --text: #eaf0f8;
+    --dim: #93a1b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 700px at 50% -10%, #1a2438 0%, #0b0f19 60%, #070a11 100%);
+    color: var(--text);
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  header {
+    text-align: center;
+    padding: 56px 20px 20px;
+  }
+  h1 {
+    margin: 0 0 12px;
+    font-size: 34px;
+    letter-spacing: 6px;
+  }
+  header p { margin: 0 auto; max-width: 760px; color: var(--dim); line-height: 1.9; font-size: 14px; }
+  .wrap {
+    max-width: 1180px;
+    margin: 28px auto 60px;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 22px;
+  }
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, #161d2b 0%, #0f141e 100%);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover { transform: translateY(-6px); box-shadow: 0 24px 50px -20px var(--glow); }
+  .art {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 50% 62%, var(--glow) 0%, transparent 62%);
+  }
+  .art img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    background: rgba(0, 0, 0, .38);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    backdrop-filter: blur(4px);
+  }
+  .body { padding: 4px 22px 22px; }
+  .name { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: 1px; }
+  .sub { margin: 6px 0 14px; color: var(--accent); font-size: 12.5px; letter-spacing: 1px; }
+  .desc { margin: 0 0 16px; color: var(--dim); font-size: 13.5px; line-height: 1.85; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid var(--line);
+    color: #c8d3e4;
+  }
+  footer { text-align: center; color: #6b7a92; font-size: 12px; padding: 0 20px 50px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>五行精灵</h1>
+  <p>金 · 木 · 水 · 火 · 土，五只神兽级伙伴。立绘为赛璐璐画风，纯静态 PNG，960×960 透明底，可直接当游戏宠物图用。</p>
+</header>
+
+<main class="wrap">
+  <article class="card" style="--accent:#ffcd5a;--glow:rgba(255,205,90,.16)">
+    <div class="art"><span class="badge">金</span><img src="./assets/pets/wuxing/jin-lion/stage-1-960.png" alt="锋金雷狮立绘"></div>
+    <div class="body">
+      <h2 class="name">锋金雷狮</h2>
+      <p class="sub">金行神兽 · 机械系 · 威风系</p>
+      <p class="desc">鬃毛是一圈上扬的金属刀刃，全身披挂鎏金与白银板甲，尾巴化成链条闪电。走起路来金属碰撞声先到，压制力最强的一只。</p>
+      <div class="meta"><span class="tag">定位：物攻前排</span><span class="tag">性格：傲</span><span class="tag">主色：香槟金 / 亮银</span></div>
+    </div>
+  </article>
+
+  <article class="card" style="--accent:#8fe0a4;--glow:rgba(120,225,150,.16)">
+    <div class="art"><span class="badge">木</span><img src="./assets/pets/wuxing/mu-qilin/stage-1-960.png" alt="苍木麒麟立绘"></div>
+    <div class="body">
+      <h2 class="name">苍木麒麟</h2>
+      <p class="sub">木行神兽 · 草系 · 唯美系</p>
+      <p class="desc">鹿形身躯覆着树皮与苔藓甲片，鹿角分叉如老树，角尖还在长新叶。蹄下生草，走到哪里哪里就绿一片。</p>
+      <div class="meta"><span class="tag">定位：续航辅助</span><span class="tag">性格：静</span><span class="tag">主色：翡翠绿 / 嫩芽黄</span></div>
+    </div>
+  </article>
+
+  <article class="card" style="--accent:#7fd4ff;--glow:rgba(90,200,255,.16)">
+    <div class="art"><span class="badge">水</span><img src="./assets/pets/wuxing/shui-jiao/stage-1-960.png" alt="碧潮蛟龙立绘"></div>
+    <div class="body">
+      <h2 class="name">碧潮蛟龙</h2>
+      <p class="sub">水行神兽 · 水系 · 威风系</p>
+      <p class="desc">琉璃般的青蓝鳞甲，背脊一排半透明水鳍，S 形游动时水珠环绕。脾气冷，出手快，是五只里最像"高手"的一只。</p>
+      <div class="meta"><span class="tag">定位：高速特攻</span><span class="tag">性格：冷</span><span class="tag">主色：青碧 / 湖蓝</span></div>
+    </div>
+  </article>
+
+  <article class="card" style="--accent:#ff9a5c;--glow:rgba(255,130,60,.18)">
+    <div class="art"><span class="badge">火</span><img src="./assets/pets/wuxing/huo-huang/stage-1-960.png" alt="赤霄炎凰立绘"></div>
+    <div class="body">
+      <h2 class="name">赤霄炎凰</h2>
+      <p class="sub">火行神兽 · 火系 · 帅气系</p>
+      <p class="desc">赤红金边的火凤凰，翼羽末端是跳动的火舌，三根火羽长尾拖在身后。飞起来半空中全是火星。</p>
+      <div class="meta"><span class="tag">定位：爆发输出</span><span class="tag">性格：烈</span><span class="tag">主色：朱红 / 橙金</span></div>
+    </div>
+  </article>
+
+  <article class="card" style="--accent:#e6b464;--glow:rgba(230,180,100,.16)">
+    <div class="art"><span class="badge">土</span><img src="./assets/pets/wuxing/tu-xi/stage-1-960.png" alt="玄岩巨犀立绘"></div>
+    <div class="body">
+      <h2 class="name">玄岩巨犀</h2>
+      <p class="sub">土行神兽 · 地系 / 土系 · 威风系</p>
+      <p class="desc">全身是层叠的岩石板块，肩背长着土黄晶簇和青苔，鼻端一支带裂纹的粗岩角。站那儿不动就有压迫感。</p>
+      <div class="meta"><span class="tag">定位：坦克守卫</span><span class="tag">性格：稳</span><span class="tag">主色：赭石黄 / 岩灰</span></div>
+    </div>
+  </article>
+</main>
+
+<footer>卡罗西亚大陆 · 五行精灵设定集（立绘均为 960×960 透明底 PNG，在 assets/pets/wuxing/ 下）</footer>
+</body>
+</html>
